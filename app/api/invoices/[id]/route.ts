@@ -46,31 +46,29 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
     id: invoice.id,
     seq: invoice.seq,
     number: formatInvoiceNumber(invoice.seq),
-    title: `Invoice #${invoice.seq === 1 ? 1019 : invoice.seq}`, // Matching #1019 in screenshot!
+    title: formatInvoiceNumber(invoice.seq),
     status: invoice.status,
     isPaid: invoice.status === 'PAID',
     paidBannerText:
       invoice.status === 'PAID'
-        ? `Invoice Paid on ${paidAt || 'August 15, 2023'}`
+        ? (paidAt ? `Invoice Paid on ${paidAt}` : 'Invoice Paid')
         : invoice.status === 'CONFIRMED' && new Date(invoice.dueDate) < new Date()
         ? 'Invoice Overdue — Payment Action Required'
         : 'Payment Pending',
     issuedOn: formatDate(invoice.issueDate),
     dueOn: formatDate(invoice.dueDate),
     from: {
-      name: 'SaaS Patterns',
-      address: '2972 Westheimer Rd. Santa Ana, Illinois 85486',
+      name: 'CodeLifters Cadence Billing',
+      address: '2972 Westheimer Rd. Santa Ana, California',
       email: 'billing@codelifters.dev',
       phone: '+1 (800) 555-CADENCE',
     },
     to: {
       name: invoice.customer.user.name,
       email: invoice.customer.user.email,
-      company: invoice.customer.companyName || 'Independent Subscriber',
-      phone: invoice.customer.phone || '(704) 555-0127',
-      address:
-        invoice.customer.address ||
-        '2118 Thornridge Cir. Syracuse, Connecticut 35624',
+      company: invoice.customer.companyName || 'Subscriber',
+      phone: invoice.customer.phone || '—',
+      address: invoice.customer.address || '—',
     },
     planName: `${invoice.subscription.plan.name} - ${formatCurrency(invoice.subscription.plan.price)}`,
     items: invoice.lines.map((line) => ({

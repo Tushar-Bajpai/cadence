@@ -276,7 +276,7 @@ export default function ProductsPage() {
               </div>
 
               <div>
-                <label className="block text-white/60 font-medium mb-1 font-mono">Base Price ($)</label>
+                <label className="block text-white/60 font-medium mb-1 font-mono">Base Price (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -364,7 +364,7 @@ export default function ProductsPage() {
               </div>
 
               <div>
-                <label className="block text-white/60 font-medium mb-1 font-mono">Price ($)</label>
+                <label className="block text-white/60 font-medium mb-1 font-mono">Price (₹)</label>
                 <input
                   type="number"
                   step="0.01"
