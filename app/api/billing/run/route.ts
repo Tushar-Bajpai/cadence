@@ -10,7 +10,8 @@ const runBillingInputSchema = z.object({
   targetDate: z.string().or(z.date()).optional(),
 })
 
-export const POST = apiHandler(null, async (req: NextRequest) => {
+// Admin/staff only: executes the invoicing batch.
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   let parsed: { batchSize: number; targetDate?: string | Date } = { batchSize: 100 }
 
   try {

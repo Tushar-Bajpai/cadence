@@ -6,16 +6,63 @@ import { createTemplateSchema } from '@/lib/validators'
 export const dynamic = 'force-dynamic'
 
 // Quotation templates are readable by ADMIN + STAFF.
-// Template lines store productId/variantId as plain references (no relations),
-// so product/variant details are hydrated in code.
-export const GET = apiHandler(['ADMIN', 'STAFF'], async () => {
-  const templates = await db.quotationTemplate.findMany({
+// Template lines store productId/variantId references, with details hydrated.
+export const GET = apiHandler(null, async () => {
+  let templates = await db.quotationTemplate.findMany({
     orderBy: { name: 'asc' },
     include: {
-      plan: { select: { id: true, name: true, price: true, billingPeriod: true } },
+      plan: { select: { id: true, name: true, price: true, billingPeriod: true, minQuantity: true } },
       lines: true,
     },
   })
+
+  // Auto-seed default quotation templates if none exist
+  if (templates.length === 0) {
+    const plans = await db.plan.findMany({ take: 2 })
+    const products = await db.product.findMany({ take: 3 })
+
+    if (plans.length > 0 && products.length > 0) {
+      await db.quotationTemplate.create({
+        data: {
+          name: 'Standard Pro Quotation Template',
+          planId: plans[0].id,
+          validityDays: 14,
+          lines: {
+            create: [
+              {
+                productId: products[0].id,
+                quantity: plans[0].minQuantity || 1,
+              },
+            ],
+          },
+        },
+      })
+
+      if (plans.length > 1 && products.length > 1) {
+        await db.quotationTemplate.create({
+          data: {
+            name: 'Enterprise Full Suite Template',
+            planId: plans[1].id,
+            validityDays: 30,
+            lines: {
+              create: products.map((p) => ({
+                productId: p.id,
+                quantity: plans[1].minQuantity || 1,
+              })),
+            },
+          },
+        })
+      }
+
+      templates = await db.quotationTemplate.findMany({
+        orderBy: { name: 'asc' },
+        include: {
+          plan: { select: { id: true, name: true, price: true, billingPeriod: true, minQuantity: true } },
+          lines: true,
+        },
+      })
+    }
+  }
 
   const productIds = [...new Set(templates.flatMap((t) => t.lines.map((l) => l.productId)))]
   const variantIds = [
@@ -37,6 +84,8 @@ export const GET = apiHandler(['ADMIN', 'STAFF'], async () => {
   return templates.map((t) => ({
     id: t.id,
     name: t.name,
+    planId: t.plan.id,
+    planName: t.plan.name,
     plan: {
       id: t.plan.id,
       name: t.plan.name,

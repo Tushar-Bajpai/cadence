@@ -19,6 +19,8 @@ import { RunBillingModal } from '@/components/admin/run-billing-modal'
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([])
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 })
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [search, setSearch] = useState('')
@@ -30,10 +32,12 @@ export default function InvoicesPage() {
     try {
       setLoading(true)
       const res = await fetch(
-        `/api/invoices?status=${statusFilter}&search=${encodeURIComponent(search)}`
+        `/api/invoices?page=${page}&limit=20&status=${statusFilter}&search=${encodeURIComponent(search)}`
       )
       const data = await res.json()
-      setInvoices(data)
+      if (!res.ok) throw new Error(data.error || 'Failed to load invoices')
+      setInvoices(data.invoices ?? [])
+      setPagination(data.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 1 })
     } catch (err) {
       console.error(err)
     } finally {
@@ -43,18 +47,15 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices()
-  }, [statusFilter])
+  }, [statusFilter, page])
 
   const handleOpenInvoice = async (invoiceId: string) => {
     try {
       const res = await fetch(`/api/invoices/${invoiceId}`)
       const data = await res.json()
-      if (res.ok) {
-        setSelectedInvoice(data)
-        setIsInvoiceModalOpen(true)
-      } else {
-        alert(data.error || 'Failed to fetch invoice')
-      }
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch invoice')
+      setSelectedInvoice(data)
+      setIsInvoiceModalOpen(true)
     } catch (err: any) {
       alert(err.message || 'Error opening invoice')
     }
@@ -94,7 +95,9 @@ export default function InvoicesPage() {
             placeholder="Search by invoice number or customer..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchInvoices()}
+            onKeyDown={(e) =>
+              e.key === 'Enter' && (setPage(1), fetchInvoices())
+            }
             className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white/[0.04] text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff]"
           />
         </div>
@@ -129,6 +132,7 @@ export default function InvoicesPage() {
                 <th className="py-3 px-6">Issue Date</th>
                 <th className="py-3 px-6">Due Date</th>
                 <th className="py-3 px-6">Amount</th>
+                <th className="py-3 px-6">Outstanding</th>
                 <th className="py-3 px-6">Status</th>
                 <th className="py-3 px-6 text-right">Action</th>
               </tr>
@@ -136,7 +140,7 @@ export default function InvoicesPage() {
             <tbody className="divide-y divide-white/[0.06]">
               {invoices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-white/40 font-mono">
+                  <td colSpan={9} className="py-10 text-center text-white/40 font-mono">
                     No invoices found.
                   </td>
                 </tr>
@@ -159,6 +163,13 @@ export default function InvoicesPage() {
                     <td className="py-4 px-6 text-white/60 font-mono">{inv.dueDate}</td>
                     <td className="py-4 px-6 font-bold text-white">
                       {inv.formattedAmount}
+                    </td>
+                    <td className="py-4 px-6 font-mono">
+                      {inv.outstanding > 0 ? (
+                        <span className="text-amber-400 font-semibold">{inv.formattedOutstanding}</span>
+                      ) : (
+                        <span className="text-white/40">₹0.00</span>
+                      )}
                     </td>
                     <td className="py-4 px-6">
                       {inv.status === 'PAID' ? (
@@ -198,10 +209,37 @@ export default function InvoicesPage() {
         </div>
       </div>
 
+      {/* Pagination */}
+      {pagination.total > 0 && (
+        <div className="flex items-center justify-between gap-4 text-xs font-mono text-white/50 px-1">
+          <span>
+            {pagination.total} invoice{pagination.total === 1 ? '' : 's'} • page{' '}
+            {pagination.page} of {pagination.totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={pagination.page <= 1 || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] hover:bg-white/10 text-white/70 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              Prev
+            </button>
+            <button
+              disabled={pagination.page >= pagination.totalPages || loading}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] hover:bg-white/10 text-white/70 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       <InvoiceModal
         invoice={selectedInvoice}
         isOpen={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
+        onInvoiceUpdate={setSelectedInvoice}
         onRefresh={fetchInvoices}
       />
 

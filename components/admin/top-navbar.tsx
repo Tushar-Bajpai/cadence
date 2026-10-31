@@ -7,6 +7,7 @@ import {
   Home,
   Users,
   ShoppingBag,
+  CreditCard,
   ScrollText,
   Box,
   Tag,
@@ -54,6 +55,11 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
       name: 'Invoices',
       href: '/admin/invoices',
       icon: ShoppingBag,
+    },
+    {
+      name: 'Payments',
+      href: '/admin/payments',
+      icon: CreditCard,
     },
     {
       name: 'Subscriptions',
