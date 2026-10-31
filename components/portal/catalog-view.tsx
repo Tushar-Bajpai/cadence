@@ -424,7 +424,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
                       {prod.type}
                     </span>
                     <span className="text-xs font-bold text-white">
-                      Base: ${Number(prod.salesPrice).toFixed(2)}
+                      Base: {formatCurrency(prod.salesPrice)}
                     </span>
                   </div>
 
@@ -568,7 +568,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
                     <span className="text-[11px] text-white/40">{selectedPlan.billingPeriod} recurring cycle</span>
                   </div>
                   <span className="font-mono font-semibold text-white">
-                    ${Number(selectedPlan.price).toFixed(2)}
+                    {formatCurrency(selectedPlan.price)}
                   </span>
                 </div>
               )}

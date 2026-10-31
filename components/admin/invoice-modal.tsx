@@ -12,6 +12,7 @@ import {
   Send,
   BadgeCheck,
 } from 'lucide-react'
+import { formatCurrency } from '@/lib/format'
 
 export interface InvoiceDetailData {
   id: string
@@ -400,7 +401,7 @@ export function InvoiceModal({
                     className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs"
                   >
                     <div>
-                      <p className="font-semibold text-emerald-300">${p.amount}</p>
+                      <p className="font-semibold text-emerald-300">{formatCurrency(p.amount)}</p>
                       <p className="text-white/50 font-mono text-[11px]">
                         {p.date} • {p.method}
                       </p>

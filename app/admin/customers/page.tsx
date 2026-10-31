@@ -8,6 +8,7 @@ import { CardSkeletonGrid } from '@/components/ui/skeleton'
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerModalData | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -15,11 +16,19 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true)
+      setError(null)
       const res = await fetch('/api/customers')
       const data = await res.json()
+      if (!res.ok || !Array.isArray(data)) {
+        setCustomers([])
+        setError(data?.error || 'Unable to load customers.')
+        return
+      }
       setCustomers(data)
     } catch (err) {
       console.error(err)
+      setCustomers([])
+      setError('Unable to load customers. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -46,9 +55,9 @@ export default function CustomersPage() {
 
   const filteredCustomers = customers.filter(
     (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.companyName.toLowerCase().includes(search.toLowerCase())
+      c.name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()) ||
+      c.companyName?.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -77,6 +86,12 @@ export default function CustomersPage() {
           className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white/[0.04] text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] shadow-sm"
         />
       </div>
+
+      {error && (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          {error}
+        </div>
+      )}
 
       {/* Grid of Customer Cards */}
       {loading ? <CardSkeletonGrid count={6} /> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

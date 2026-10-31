@@ -16,6 +16,7 @@ import {
 } from '@tabler/icons-react'
 import { usePortalStore, PortalTab } from '@/stores/use-portal-store'
 import { useAuthStore } from '@/stores/use-auth-store'
+import { ProfileAvatar } from '@/components/profile-avatar'
 
 export type { PortalTab }
 
@@ -210,6 +211,14 @@ export function PortalTopNavbar({
               </div>
             )}
           </div>
+
+          <Link
+            href="/portal/profile"
+            title="Profile"
+            className="rounded-full hover:scale-105 transition-transform"
+          >
+            <ProfileAvatar name={user?.name || customerName} />
+          </Link>
         </div>
       </div>
     </header>

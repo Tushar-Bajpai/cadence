@@ -223,11 +223,19 @@ async function main() {
   }
 
   // 6. Plans
-  let basicPlan = await db.plan.findFirst({ where: { name: 'Basic Plan - $9.99' } })
+  let basicPlan = await db.plan.findFirst({
+    where: { name: { in: ['Basic Plan - ₹9.99', 'Basic Plan - $9.99'] } },
+  })
+  if (basicPlan?.name === 'Basic Plan - $9.99') {
+    basicPlan = await db.plan.update({
+      where: { id: basicPlan.id },
+      data: { name: 'Basic Plan - ₹9.99' },
+    })
+  }
   if (!basicPlan) {
     basicPlan = await db.plan.create({
       data: {
-        name: 'Basic Plan - $9.99',
+        name: 'Basic Plan - ₹9.99',
         price: 9.99,
         billingPeriod: BillingPeriod.MONTHLY,
         minQuantity: 1,
@@ -471,7 +479,7 @@ async function main() {
   }
 
   // Invoices matching Screenshot 1 table:
-  // Aug 03, 2025 | Pro Plan - Monthly | $29.00 | Paid
+  // Aug 03, 2025 | Pro Plan - Monthly | ₹29.00 | Paid
   const existingInvAug03 = await db.invoice.findFirst({
     where: { customerId: robertCustomer.id, periodStart: new Date('2025-08-01') },
   })
@@ -516,7 +524,7 @@ async function main() {
     })
   }
 
-  // Aug 01, 2025 | Pro Plan - Monthly | $29.00 | Failed
+  // Aug 01, 2025 | Pro Plan - Monthly | ₹29.00 | Failed
   const existingInvAug01 = await db.invoice.findFirst({
     where: { customerId: robertCustomer.id, periodStart: new Date('2025-07-15') },
   })
@@ -550,7 +558,7 @@ async function main() {
     })
   }
 
-  // Jul 01, 2025 | Pro Plan - Monthly | $29.00 | Paid
+  // Jul 01, 2025 | Pro Plan - Monthly | ₹29.00 | Paid
   const existingInvJul01 = await db.invoice.findFirst({
     where: { customerId: robertCustomer.id, periodStart: new Date('2025-06-01') },
   })
@@ -606,4 +614,3 @@ main()
   .finally(async () => {
     await db.$disconnect()
   })
-

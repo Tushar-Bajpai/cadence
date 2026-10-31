@@ -11,7 +11,7 @@ import {
   ArrowUpRight,
   Banknote,
   Wallet,
-  CircleDollarSign,
+  IndianRupee,
   Filter,
 } from 'lucide-react'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
@@ -46,7 +46,7 @@ const METHOD_LABELS: Record<string, { label: string; icon: React.ReactNode; colo
   CARD: { label: 'Card', icon: <CreditCard className="w-3.5 h-3.5" />, color: 'text-blue-300 bg-blue-500/15 border-blue-500/30' },
   UPI: { label: 'UPI', icon: <Wallet className="w-3.5 h-3.5" />, color: 'text-violet-300 bg-violet-500/15 border-violet-500/30' },
   BANK_TRANSFER: { label: 'Bank Transfer', icon: <Banknote className="w-3.5 h-3.5" />, color: 'text-teal-300 bg-teal-500/15 border-teal-500/30' },
-  CASH: { label: 'Cash', icon: <CircleDollarSign className="w-3.5 h-3.5" />, color: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30' },
+  CASH: { label: 'Cash', icon: <IndianRupee className="w-3.5 h-3.5" />, color: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30' },
   CHEQUE: { label: 'Cheque', icon: <Receipt className="w-3.5 h-3.5" />, color: 'text-amber-300 bg-amber-500/15 border-amber-500/30' },
 }
 

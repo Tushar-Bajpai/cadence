@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import { TopLoadingBar } from '@/components/top-loading-bar'
 import { DbKeepAlive } from '@/components/db-keep-alive'
+import { DataSyncListener } from '@/components/data-sync-listener'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <TopLoadingBar />
           <DbKeepAlive />
+          <DataSyncListener />
         </Suspense>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

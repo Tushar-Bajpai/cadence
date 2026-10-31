@@ -28,7 +28,6 @@ import {
   Calendar,
   User,
   ExternalLink,
-  DollarSign,
   Layers,
   ChevronDown,
 } from 'lucide-react'

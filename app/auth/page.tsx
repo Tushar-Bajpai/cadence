@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -27,6 +27,23 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
+
+  useEffect(() => {
+    const googleError = new URLSearchParams(window.location.search).get('googleError')
+    if (!googleError) return
+
+    const messages: Record<string, string> = {
+      unconfigured: 'Google sign-in is not configured on this server.',
+      invalid_state: 'Google sign-in expired or was cancelled. Please try again.',
+      token_exchange: 'Google sign-in could not be completed. Please try again.',
+      profile: 'Google profile information could not be read. Please try again.',
+      no_email: 'Google did not provide an email address for this account.',
+      unverified_email: 'Your Google email address is not verified.',
+      server_error: 'Google sign-in failed unexpectedly. Please try again.',
+    }
+    setError(messages[googleError] || 'Google sign-in failed. Please try again.')
+    window.history.replaceState({}, '', '/auth')
+  }, [])
 
   // Form fields
   const [name, setName] = useState('')
@@ -87,15 +104,10 @@ export default function AuthPage() {
   }
 
   const handleOAuth = (provider: string) => {
-    setLoadingProvider(provider)
-    setTimeout(() => {
-      setLoadingProvider(null)
-      setIsSuccess(true)
-      setSuccessMsg(`Signed in with ${provider}`)
-      setTimeout(() => {
-        router.push('/')
-      }, 1200)
-    }, 650)
+    if (provider === 'Google') {
+      setLoadingProvider(provider)
+      window.location.assign('/api/auth/google')
+    }
   }
 
   return (

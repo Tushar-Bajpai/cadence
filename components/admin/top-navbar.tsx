@@ -18,6 +18,8 @@ import {
   Zap,
 } from 'lucide-react'
 import { useAdminStore } from '@/stores/use-admin-store'
+import { useAuthStore } from '@/stores/use-auth-store'
+import { ProfileAvatar } from '@/components/profile-avatar'
 import {
   IconSmartHome,
   IconUsers,
@@ -44,6 +46,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   const pathname = usePathname()
   const router = useRouter()
   const store = useAdminStore()
+  const { user, fetchUser } = useAuthStore()
 
   const handleRunBilling = onRunBillingClick || store.openRunBilling
   const handleCustomerModal = onCustomerModalClick || (() => store.openCustomerModal())
@@ -51,6 +54,10 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   const searchQuery = store.searchQuery
   const setSearchQuery = store.setSearchQuery
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+
+  React.useEffect(() => {
+    if (!user) void fetchUser()
+  }, [fetchUser, user])
 
   // Navigation icon tabs matching reference screenshot:
   const navItems = [
@@ -102,9 +109,8 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   ]
 
   const isActive = (href: string) => {
-    if (href === '/admin/dashboard' || href === '/admin') {
-      return pathname === '/admin' || pathname === '/admin/dashboard'
-    }
+    if (href === '/admin') return pathname === '/admin'
+    if (href === '/admin/dashboard') return pathname.startsWith('/admin/dashboard')
     return pathname.startsWith(href)
   }
 
@@ -259,9 +265,9 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
           <button
             onClick={() => setShowSettingsMenu(!showSettingsMenu)}
             title="Administrator Account (Click for Profile & Sign Out)"
-            className="w-10 h-10 rounded-2xl bg-[#8978ff] hover:bg-[#9b8cff] border border-white/10 text-white font-bold text-sm flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-[0_2px_12px_rgba(137,120,255,0.3)]"
+            className="rounded-full hover:scale-105 transition-transform cursor-pointer active:scale-95"
           >
-            <span>AD</span>
+            <ProfileAvatar name={user?.name || 'Admin'} />
           </button>
         </div>
       </div>
