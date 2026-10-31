@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler } from '@/lib/api'
+import { apiHandler, UnauthorizedError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { formatCurrency, formatDate, formatInvoiceNumber } from '@/lib/format'
@@ -10,10 +10,15 @@ export const dynamic = 'force-dynamic'
 export const GET = apiHandler(null, async (req: NextRequest, session) => {
   const customer = await getPortalCustomer(session)
   if (!customer) {
-    throw new Error('Customer profile not found')
+    throw new UnauthorizedError('Customer profile not found')
   }
 
-  // Get active subscription and plan
+  // Count all active subscriptions for this customer
+  const activeSubsCount = await db.subscription.count({
+    where: { customerId: customer.id, status: 'ACTIVE' },
+  })
+
+  // Get primary active subscription
   const activeSub = await db.subscription.findFirst({
     where: { customerId: customer.id, status: 'ACTIVE' },
     include: {
@@ -154,6 +159,8 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
       }
     : null
 
+  const nextPendingInvoice = invoices.find((inv) => inv.status === 'CONFIRMED')
+
   return {
     customer: {
       id: customer.id,
@@ -170,12 +177,22 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     paymentMethod,
     billingHistory,
     metrics: {
-      activeSubsCount: activeSub ? 1 : 0,
+      activeSubsCount,
       totalOutstanding,
       formattedTotalOutstanding: formatCurrency(totalOutstanding),
       totalPaid,
       formattedTotalPaid: formatCurrency(totalPaid),
       invoicesCount: invoices.length,
+      nextInvoiceDate: activeSub?.nextBillingDate
+        ? formatDate(activeSub.nextBillingDate)
+        : nextPendingInvoice
+        ? formatDate(nextPendingInvoice.dueDate)
+        : 'None scheduled',
+      nextInvoiceAmount: activeSub
+        ? formatCurrency(activeSub.plan.price)
+        : nextPendingInvoice
+        ? formatCurrency(nextPendingInvoice.total)
+        : '₹0.00',
     },
   }
 })

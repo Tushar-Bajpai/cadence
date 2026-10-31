@@ -19,17 +19,17 @@ export type PortalTab = 'billing' | 'subscriptions' | 'invoices' | 'catalog' | '
 
 interface PortalTopNavbarProps {
   activeTab: PortalTab
-  onTabChange: (tab: PortalTab) => void
+  onTabChange?: (tab: PortalTab) => void
   customerName?: string
-  searchQuery: string
-  onSearchChange: (q: string) => void
+  searchQuery?: string
+  onSearchChange?: (q: string) => void
 }
 
 export function PortalTopNavbar({
   activeTab,
   onTabChange,
   customerName = 'Subscriber',
-  searchQuery,
+  searchQuery = '',
   onSearchChange,
 }: PortalTopNavbarProps) {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
@@ -40,26 +40,31 @@ export function PortalTopNavbar({
       id: 'billing' as PortalTab,
       label: 'Home & Billing',
       icon: IconSmartHome,
+      href: '/portal',
     },
     {
       id: 'subscriptions' as PortalTab,
       label: 'My Subscriptions',
       icon: IconRepeat,
+      href: '/portal/subscriptions',
     },
     {
       id: 'invoices' as PortalTab,
       label: 'Invoices & Receipts',
       icon: IconReceipt2,
+      href: '/portal/invoices',
     },
     {
       id: 'catalog' as PortalTab,
       label: 'Products & Plans',
       icon: IconBox,
+      href: '/portal/products',
     },
     {
       id: 'profile' as PortalTab,
       label: 'Profile & Activity',
       icon: IconUser,
+      href: '/portal/profile',
     },
   ]
 
@@ -95,9 +100,14 @@ export function PortalTopNavbar({
               const Icon = item.icon
               const active = activeTab === item.id
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => onTabChange(item.id)}
+                  href={item.href}
+                  onClick={(e) => {
+                    if (onTabChange) {
+                      onTabChange(item.id)
+                    }
+                  }}
                   title={item.label}
                   className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
                     active
@@ -106,7 +116,7 @@ export function PortalTopNavbar({
                   }`}
                 >
                   <Icon size={20} stroke={1.8} />
-                </button>
+                </Link>
               )
             })}
           </nav>
@@ -120,7 +130,7 @@ export function PortalTopNavbar({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               placeholder="Search invoices, plans..."
               className="w-full h-9 bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-4 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition"
             />
@@ -156,16 +166,14 @@ export function PortalTopNavbar({
                   <p className="text-[10px] text-white/50 font-mono">Customer Workspace</p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    onTabChange('profile')
-                    setShowSettingsMenu(false)
-                  }}
+                <Link
+                  href="/portal/profile"
+                  onClick={() => setShowSettingsMenu(false)}
                   className="w-full text-left px-3.5 py-2 text-white/80 hover:text-white hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
                 >
                   <IconUser size={16} stroke={1.8} className="text-[#8978ff]" />
                   <span>My Profile & Activity</span>
-                </button>
+                </Link>
 
                 <Link
                   href="/"

@@ -1,6 +1,12 @@
 import { db } from './db'
 import { SessionPayload } from './session'
 
+/**
+ * Resolves the authenticated customer for portal queries.
+ * Defense-in-depth: If a session is provided, it ONLY resolves the customer
+ * linked to that specific session (userId or customerId). It NEVER falls back
+ * to another customer if a session is present.
+ */
 export async function getPortalCustomer(session: SessionPayload | null) {
   // 1. Direct customerId on session
   if (session?.customerId) {
@@ -21,6 +27,8 @@ export async function getPortalCustomer(session: SessionPayload | null) {
   }
 
   // No customer record for this session — never fall back to an arbitrary
-  // customer. Fail closed: callers turn this into 401/403.
+  // customer, even in dev: an unauthenticated request must not gain the
+  // identity (and payment ability) of the first customer in the DB.
+  // Callers turn this into 401/403.
   return null
 }

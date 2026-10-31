@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext, ApiError } from '@/lib/api'
+import { apiHandler, ApiContext, ApiError, NotFoundError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { getRazorpay, toPaise } from '@/lib/razorpay'
@@ -18,7 +18,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new ApiError(400, 'Invoice ID is required')
+  if (!idOrSeq) throw new NotFoundError('Invoice ID is required')
 
   const isNumeric = /^\d+$/.test(idOrSeq)
   const invoice = await db.invoice.findFirst({
@@ -33,7 +33,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     },
   })
 
-  if (!invoice) throw new ApiError(404, 'Invoice not found or access denied')
+  if (!invoice) throw new NotFoundError('Invoice not found')
 
   if (invoice.status === InvoiceStatus.PAID) {
     throw new ApiError(400, 'Invoice is already paid in full')

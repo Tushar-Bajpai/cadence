@@ -18,6 +18,7 @@ import {
   IconUser,
   IconShieldLock,
   IconCreditCard,
+  IconChartBar,
 } from '@tabler/icons-react'
 
 interface TopNavbarProps {
@@ -31,11 +32,11 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   const [searchQuery, setSearchQuery] = useState('')
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
-  // 5 navigation icon tabs matching reference screenshot:
+  // Navigation icon tabs matching reference screenshot:
   const navItems = [
     {
-      name: 'Dashboard',
-      href: '/admin',
+      name: 'Finance Dashboard',
+      href: '/admin/dashboard',
       icon: IconSmartHome,
     },
     {
@@ -76,7 +77,9 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   ]
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin'
+    if (href === '/admin/dashboard' || href === '/admin') {
+      return pathname === '/admin' || pathname === '/admin/dashboard'
+    }
     return pathname.startsWith(href)
   }
 
@@ -89,10 +92,9 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   return (
     <header className="sticky top-0 z-40 w-full bg-[#08061d]/90 backdrop-blur-xl border-b border-white/10 px-5 py-3 select-none">
       <div className="w-full flex items-center justify-between gap-4">
-        {/* Left Section: 4-Dots Logo + Cadence Title + 5 Icon Tabs */}
+        {/* Left Section: 4-Dots Logo + Cadence Title + Navigation Tabs */}
         <div className="flex items-center gap-6 sm:gap-7 shrink-0">
-          {/* Exact 4-dots brand logo matching reference image */}
-          <Link href="/admin" className="flex items-center gap-2.5 group">
+          <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
             <svg
               className="w-5 h-5 shrink-0 group-hover:scale-105 transition-transform"
               viewBox="0 0 24 24"
@@ -186,6 +188,14 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
 
             {showSettingsMenu && (
               <div className="absolute right-0 mt-2 w-52 bg-[#120e28] rounded-2xl border border-white/15 shadow-2xl p-1.5 z-50 text-xs space-y-1 backdrop-blur-xl animate-in fade-in duration-150">
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setShowSettingsMenu(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
+                >
+                  <IconChartBar size={16} stroke={1.8} className="text-[#8978ff]" />
+                  <span>Finance Dashboard</span>
+                </Link>
                 <button
                   onClick={() => {
                     setShowSettingsMenu(false)
@@ -221,14 +231,6 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                 >
                   <IconExternalLink size={16} stroke={1.8} className="text-white/50" />
                   <span>Landing Magazine</span>
-                </Link>
-                <Link
-                  href="/auth"
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
-                  onClick={() => setShowSettingsMenu(false)}
-                >
-                  <IconUsers size={16} stroke={1.8} className="text-white/50" />
-                  <span>Authentication Portal</span>
                 </Link>
               </div>
             )}

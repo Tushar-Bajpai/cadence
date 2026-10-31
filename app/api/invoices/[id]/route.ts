@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext, ApiError } from '@/lib/api'
+import { apiHandler, ApiContext, ApiError, NotFoundError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { InvoiceStatus, Role } from '@prisma/client'
 import { formatInvoiceNumber, formatCurrency, formatDate, formatDateTime } from '@/lib/format'
@@ -16,7 +16,7 @@ export const GET = apiHandler(null, async (
 
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new ApiError(400, 'Invoice ID is required')
+  if (!idOrSeq) throw new NotFoundError('Invoice ID is required')
 
   // Support lookup by cuid id or sequence number
   const isNumeric = /^\d+$/.test(idOrSeq)
@@ -43,7 +43,7 @@ export const GET = apiHandler(null, async (
     },
   })
 
-  if (!invoice) throw new ApiError(404, 'Invoice not found')
+  if (!invoice) throw new NotFoundError('Invoice not found')
 
   const now = new Date()
   const outstanding = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))
@@ -137,8 +137,8 @@ export const GET = apiHandler(null, async (
       id: p.id,
       amount: Number(p.amount),
       formattedAmount: formatCurrency(p.amount),
-      method: p.method,
       date: formatDate(p.date),
+      method: p.method,
       note: p.note,
     })),
   }

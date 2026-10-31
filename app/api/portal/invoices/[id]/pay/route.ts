@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext, ApiError } from '@/lib/api'
+import { apiHandler, ApiContext, ApiError, NotFoundError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { InvoiceStatus, PayMethod, Prisma } from '@prisma/client'
@@ -14,7 +14,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new ApiError(400, 'Invoice ID is required')
+  if (!idOrSeq) throw new NotFoundError('Invoice ID is required')
 
   const isNumeric = /^\d+$/.test(idOrSeq)
   const invoice = await db.invoice.findFirst({
@@ -25,7 +25,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
   })
 
   if (!invoice) {
-    throw new ApiError(404, 'Invoice not found or access denied')
+    throw new NotFoundError('Invoice not found')
   }
 
   // Only CONFIRMED invoices can be paid. DRAFT must be confirmed by the
@@ -41,10 +41,15 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
   }
 
   const body = await req.json().catch(() => ({}))
-  const { method = PayMethod.CARD, note = 'Settled via Customer Portal' } = body
+  const { method = PayMethod.CARD, note = 'Settled via Customer Portal', amount } = body
 
   if (!Object.values(PayMethod).includes(method)) {
     throw new ApiError(400, 'Invalid payment method')
+  }
+
+  const parsedAmount = amount != null ? Number(amount) : null
+  if (parsedAmount != null && (!Number.isFinite(parsedAmount) || parsedAmount <= 0)) {
+    throw new ApiError(400, 'Payment amount must be a positive number')
   }
 
   const payment = await db.$transaction(
@@ -52,17 +57,24 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
       // Re-read inside the transaction so two concurrent "Pay now" calls
       // cannot both charge the same invoice.
       const current = await tx.invoice.findUnique({ where: { id: invoice.id } })
-      if (!current) throw new ApiError(404, 'Invoice no longer exists')
+      if (!current) throw new NotFoundError('Invoice no longer exists')
       if (current.status !== InvoiceStatus.CONFIRMED) {
         throw new ApiError(409, 'Invoice status changed while processing payment. Please retry.')
       }
 
-      const outstanding = new Prisma.Decimal(current.total).minus(current.amountPaid)
+      // Recompute from the ledger, never from client math.
+      const outstanding = new Prisma.Decimal(current.total)
+        .minus(current.amountPaid)
+        .toDecimalPlaces(2)
       if (outstanding.lessThanOrEqualTo(0)) {
         return { alreadyPaid: true as const }
       }
 
-      const amountToPay = Prisma.Decimal.min(outstanding, outstanding.toDecimalPlaces(2))
+      const amountToPay =
+        parsedAmount != null
+          ? Prisma.Decimal.min(new Prisma.Decimal(parsedAmount).toDecimalPlaces(2), outstanding)
+          : outstanding
+
       const p = await tx.payment.create({
         data: {
           invoiceId: current.id,
@@ -74,7 +86,6 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
         },
       })
 
-      // Recompute from the ledger, never from client math.
       const aggregate = await tx.payment.aggregate({
         _sum: { amount: true },
         where: { invoiceId: current.id },
@@ -90,7 +101,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
         },
       })
 
-      return { payment: p, invoice: updatedInvoice, alreadyPaid: false as const }
+      return { payment: p, invoice: updatedInvoice, alreadyPaid: false as const, amountToPay }
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
   )
@@ -101,7 +112,8 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   return {
     success: true,
-    message: `Invoice #${invoice.seq} paid successfully! Receipt generated.`,
-    payment,
+    message: `Payment of ₹${payment.amountToPay.toNumber()} recorded successfully.`,
+    payment: payment.payment,
+    invoice: payment.invoice,
   }
 })
