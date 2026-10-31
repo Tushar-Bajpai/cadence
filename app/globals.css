@@ -181,6 +181,26 @@
 .noise-overlay { position: fixed; inset: 0; opacity: 0.09; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E"); pointer-events: none; z-index: 40; }
 .noise-overlay::after { content: ''; position: absolute; inset: 0; opacity: .5; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n2'%3E%3CfeTurbulence type='turbulence' baseFrequency='.14 .06' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n2)' opacity='.18'/%3E%3C/svg%3E"); }
 
+/* Diagonal streak gradient — the hero's theme, reusable on any spread */
+.streak-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 45% 18% at 70% 43%, rgba(98, 83, 255, 0.5), transparent 68%),
+    linear-gradient(
+      154deg,
+      transparent 0 40%,
+      rgba(82, 67, 244, 0.5) 40.2% 42.5%,
+      transparent 42.7% 47%,
+      rgba(21, 14, 101, 0.7) 47.2% 51%,
+      transparent 51.2% 57%,
+      rgba(47, 36, 193, 0.3) 57.2% 63%,
+      transparent 63.2% 100%
+    );
+}
+
 /* Aurora grain-wave landscape (Ironclad-style footer) */
 .aurora-footer { position: relative; overflow: hidden; }
 .aurora-waves {

@@ -51,6 +51,7 @@ export function FieldNotesSection({ pageStateClass, onNavigate }: FieldNotesSect
         <span>CORE CAPABILITIES</span>
         <span className="hidden sm:inline">SYSTEM MODULES</span>
       </div>
+      <div className="streak-overlay" aria-hidden="true" />
 
       {/* Maximalist editorial rows */}
       <div className="relative z-10 flex w-full flex-1 flex-col justify-center gap-4 py-5 sm:gap-6 sm:py-8 lg:gap-8">

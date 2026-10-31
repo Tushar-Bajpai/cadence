@@ -19,6 +19,7 @@ export function StorySection({ pageStateClass, onNavigate }: StorySectionProps) 
         <span>THE ENGINE</span>
         <span className="hidden sm:inline">TRANSACTIONAL BILLING RUNS</span>
       </div>
+      <div className="streak-overlay" aria-hidden="true" />
 
       {/* Story Spread Body — maximalist stretched editorial composition */}
       <div className="relative z-10 flex w-full flex-1 flex-col justify-center gap-4 py-5 sm:gap-6 sm:py-8 lg:gap-8">

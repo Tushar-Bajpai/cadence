@@ -9,8 +9,8 @@ import {
   Flame,
   Heart,
 } from 'lucide-react'
-import { SiGithub, SiVercel, SiX, SiInstagram, SiYoutube } from 'react-icons/si'
-import { FaLinkedinIn } from 'react-icons/fa6'
+import { SiX, SiVercel } from 'react-icons/si'
+import { FaGithub, FaLinkedinIn } from 'react-icons/fa6'
 import { CadenceLogo } from '@/components/cadence-logo'
 
 interface ContactSectionProps {
@@ -102,58 +102,6 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
               <span>Say hello to the team</span>
               <ArrowUpRight className="transition-transform hover:translate-x-1 hover:-translate-y-1" size={22} />
             </a>
-
-            {/* Hackathon Project Action Hub */}
-            <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8 sm:gap-4 sm:text-base">
-              {/* Quick Copy Team Email */}
-              <button
-                onClick={handleCopyEmail}
-                className="group inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 font-mono text-xs text-white/80 transition hover:bg-white/15 hover:border-white/40 sm:px-5 sm:py-2.5 sm:text-sm cursor-pointer"
-                title="Click to copy team email"
-              >
-                {copied ? (
-                  <>
-                    <Check className="size-4 text-emerald-400" />
-                    <span className="text-emerald-300">utsav0111@gmail.com copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="size-4 text-white/50 transition group-hover:text-white" />
-                    <span>utsav0111@gmail.com</span>
-                  </>
-                )}
-              </button>
-
-              <a
-                href="https://github.com/Tushar-Bajpai/cadence"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 transition hover:bg-white/15 hover:text-white hover:border-white/30 sm:px-5 sm:py-2.5 sm:text-base"
-              >
-                <SiGithub className="size-4" />
-                <span>GitHub Codebase</span>
-                <ArrowUpRight className="size-3.5 opacity-60" />
-              </a>
-
-              <a
-                href="https://codelifters.xyz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 rounded-full border border-[#8978ff]/40 bg-[#8978ff]/15 px-4 py-2 text-[#cfc7ff] transition hover:bg-[#8978ff]/30 hover:text-white hover:border-[#8978ff]/60 sm:px-5 sm:py-2.5 sm:text-base"
-              >
-                <SiVercel className="size-4" />
-                <span>Deployment Link</span>
-                <ArrowUpRight className="size-3.5 opacity-60" />
-              </a>
-
-              <Link
-                href="/auth"
-                className="inline-flex items-center gap-2.5 rounded-full border border-[#8978ff]/50 bg-[#8978ff]/25 px-4 py-2 text-base font-medium text-white transition hover:bg-[#8978ff]/40 hover:border-[#8978ff] shadow-[0_0_20px_rgba(137,120,255,0.3)] sm:px-5 sm:py-2.5 sm:text-lg"
-              >
-                <span>Portal Sign In</span>
-                <ArrowUpRight className="size-4 opacity-70" />
-              </Link>
-            </div>
           </div>
         </div>
       </div>
@@ -177,8 +125,17 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
               Join teams already running recurring billing on Cadence — every
               cycle invoiced. Zero missed. Never twice.
             </p>
-            {/* Social tiles */}
+            {/* Social tiles — project-relevant: code, community, team, deploy */}
             <div className="mt-1 flex items-center gap-2.5">
+              <a
+                href="https://github.com/Tushar-Bajpai/cadence"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Cadence GitHub repository"
+                className="social-tile"
+              >
+                <FaGithub className="size-4" />
+              </a>
               <a
                 href="https://x.com"
                 target="_blank"
@@ -189,106 +146,125 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
                 <SiX className="size-3.5" />
               </a>
               <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Cadence on Instagram"
-                className="social-tile"
-              >
-                <SiInstagram className="size-4" />
-              </a>
-              <a
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Cadence on LinkedIn"                className="social-tile"
+                aria-label="Cadence on LinkedIn"
+                className="social-tile"
               >
                 <FaLinkedinIn className="size-4" />
               </a>
               <a
-                href="https://youtube.com"
+                href="https://codelifters.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Cadence on YouTube"
+                aria-label="Cadence deployment on Vercel"
                 className="social-tile"
               >
-                <SiYoutube className="size-4" />
+                <SiVercel className="size-3.5" />
               </a>
             </div>
           </div>
 
-          {/* Link sections */}
+          {/* Link sections — modules & flows from the project build plan */}
           <nav className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:col-span-8 lg:gap-x-4">
             <div>
               <h4 className="footer-col-head">Product</h4>
               <ul>
-                {['Features', 'Integrations', 'Pricing', 'Changelog', 'Security'].map((l) => (
-                  <li key={l}>
-                    <button
-                      onClick={() => onNavigate(2)}
-                      className="footer-col-link cursor-pointer text-left"
-                    >
-                      {l}
-                    </button>
-                  </li>
-                ))}
+                <li>
+                  <button onClick={() => onNavigate(1)} className="footer-col-link cursor-pointer text-left">
+                    Subscription Engine
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate(2)} className="footer-col-link cursor-pointer text-left">
+                    Automated Invoicing
+                  </button>
+                </li>
+                <li>
+                  <Link href="/portal" className="footer-col-link">
+                    Customer Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin" className="footer-col-link">
+                    Finance Dashboard
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="footer-col-head">Company</h4>
+              <h4 className="footer-col-head">Catalog</h4>
               <ul>
                 <li>
-                  <a href="https://codelifters.xyz" target="_blank" rel="noopener noreferrer" className="footer-col-link">
-                    About Us
-                  </a>
+                  <Link href="/admin/products" className="footer-col-link">
+                    Products &amp; Variants
+                  </Link>
                 </li>
                 <li>
-                  <a href="https://codelifters.xyz/careers" target="_blank" rel="noopener noreferrer" className="footer-col-link">
-                    Careers
-                  </a>
+                  <Link href="/admin/products" className="footer-col-link">
+                    Plans &amp; Billing Periods
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin/templates" className="footer-col-link">
+                    Quotation Templates
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin/discounts" className="footer-col-link">
+                    Taxes &amp; Discounts
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="footer-col-head">Billing</h4>
+              <ul>
+                <li>
+                  <Link href="/admin/subscriptions" className="footer-col-link">
+                    Subscription Lifecycle
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin/invoices" className="footer-col-link">
+                    Invoice Runs
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin/payments" className="footer-col-link">
+                    Payments &amp; Settlement
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin" className="footer-col-link">
+                    Overdue Analytics
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="footer-col-head">Access</h4>
+              <ul>
+                <li>
+                  <Link href="/auth" className="footer-col-link">
+                    Portal Sign In
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/auth" className="footer-col-link">
+                    Admin Studio
+                  </Link>
                 </li>
                 <li>
                   <button onClick={handleCopyEmail} className="footer-col-link cursor-pointer">
                     Contact
                   </button>
                 </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="footer-col-head">Resources</h4>
-              <ul>
                 <li>
                   <a href="https://github.com/Tushar-Bajpai/cadence" target="_blank" rel="noopener noreferrer" className="footer-col-link">
                     Documentation
                   </a>
-                </li>
-                <li>
-                  <a href="https://github.com/Tushar-Bajpai/cadence" target="_blank" rel="noopener noreferrer" className="footer-col-link">
-                    API Reference
-                  </a>
-                </li>
-                <li>
-                  <a href="https://github.com/Tushar-Bajpai/cadence" target="_blank" rel="noopener noreferrer" className="footer-col-link">
-                    Help Center
-                  </a>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate(0)} className="footer-col-link cursor-pointer">
-                    Community
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="footer-col-head">Legal</h4>
-              <ul>
-                <li><a href="#" className="footer-col-link">Privacy Policy</a></li>
-                <li><a href="#" className="footer-col-link">Terms of Service</a></li>
-                <li><a href="#" className="footer-col-link">Cookie Policy</a></li>
-                <li>
-                  <Link href="/auth" className="footer-col-link">
-                    Portal Sitemap
-                  </Link>
                 </li>
               </ul>
             </div>
