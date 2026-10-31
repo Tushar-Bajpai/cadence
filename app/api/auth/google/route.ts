@@ -26,8 +26,7 @@ export async function GET(req: NextRequest) {
     maxAge: 600, // 10 min: the user must complete consent in time
   })
 
-  const appOrigin = process.env.APP_URL?.trim().replace(/\/+$/, '') || req.nextUrl.origin
-  const redirectUri = `${appOrigin}/api/auth/google/callback`
+  const redirectUri = `${req.nextUrl.origin}/api/auth/google/callback`
   const authorizeUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
   authorizeUrl.searchParams.set('client_id', clientId)
   authorizeUrl.searchParams.set('redirect_uri', redirectUri)

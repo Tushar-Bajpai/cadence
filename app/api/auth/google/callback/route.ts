@@ -32,8 +32,7 @@ export async function GET(req: NextRequest) {
       return redirectFail('invalid_state')
     }
 
-    const appOrigin = process.env.APP_URL?.trim().replace(/\/+$/, '') || url.origin
-    const redirectUri = `${appOrigin}/api/auth/google/callback`
+    const redirectUri = `${url.origin}/api/auth/google/callback`
 
     // Exchange the authorization code
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
