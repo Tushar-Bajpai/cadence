@@ -1,22 +1,30 @@
 import { NextRequest } from 'next/server'
 import { apiHandler } from '@/lib/api'
 import { runBillingBatch } from '@/lib/billing-run'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
+const runBillingInputSchema = z.object({
+  batchSize: z.coerce.number().int().min(1).max(1000).default(100),
+  targetDate: z.string().or(z.date()).optional(),
+})
+
 export const POST = apiHandler(null, async (req: NextRequest) => {
-  let batchSize = 100
-  let targetDate = new Date()
+  let parsed: { batchSize: number; targetDate?: string | Date } = { batchSize: 100 }
 
   try {
-    const body = await req.json()
-    if (body.batchSize) batchSize = Number(body.batchSize)
-    if (body.targetDate) targetDate = new Date(body.targetDate)
-  } catch {
-    // optional body
+    const raw = await req.json()
+    if (raw && typeof raw === 'object') {
+      parsed = runBillingInputSchema.parse(raw)
+    }
+  } catch (e: any) {
+    if (e instanceof z.ZodError) throw e
+    // If empty body, defaults apply
   }
 
-  const result = await runBillingBatch(targetDate, batchSize)
+  const targetDate = parsed.targetDate ? new Date(parsed.targetDate) : new Date()
+  const result = await runBillingBatch(targetDate, parsed.batchSize)
   return {
     success: true,
     message: `Billing batch executed. Created ${result.created} invoices, skipped ${result.skipped}, failed ${result.failed}.`,

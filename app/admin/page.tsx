@@ -20,13 +20,22 @@ import {
 } from 'lucide-react'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
 import { RunBillingModal } from '@/components/admin/run-billing-modal'
+import { useAdminStore } from '@/stores/use-admin-store'
 
 export default function AdminDashboardPage() {
+  const {
+    isRunBillingOpen,
+    openRunBilling,
+    closeRunBilling,
+    isInvoiceModalOpen,
+    openInvoiceModal,
+    closeInvoiceModal,
+    showToast,
+  } = useAdminStore()
+
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetailData | null>(null)
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
-  const [isRunBillingOpen, setIsRunBillingOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PAID' | 'FAILED'>('ALL')
   const [showFilterMenu, setShowFilterMenu] = useState(false)
 
@@ -53,12 +62,12 @@ export default function AdminDashboardPage() {
       const data = await res.json()
       if (res.ok) {
         setSelectedInvoice(data)
-        setIsInvoiceModalOpen(true)
+        openInvoiceModal(invoiceId)
       } else {
-        alert(data.error || 'Failed to fetch invoice')
+        showToast(data.error || 'Failed to fetch invoice', 'error')
       }
     } catch (err: any) {
-      alert(err.message || 'Error opening invoice')
+      showToast(err.message || 'Error opening invoice', 'error')
     }
   }
 
@@ -89,11 +98,11 @@ export default function AdminDashboardPage() {
 
           <div className="flex items-center gap-3 shrink-0">
             <button
-              onClick={() => setIsRunBillingOpen(true)}
+              onClick={openRunBilling}
               className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_10px_35px_rgba(137,120,255,.4)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
               <Zap className="w-4 h-4 fill-white" />
-              <span>Run Billing Engine ⚡</span>
+              <span>Run Billing Engine</span>
             </button>
 
             <button
@@ -138,7 +147,7 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <button
-                    onClick={() => setIsRunBillingOpen(true)}
+                    onClick={openRunBilling}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
                   >
                     <span>Run Billing</span>
@@ -413,7 +422,7 @@ export default function AdminDashboardPage() {
       <InvoiceModal
         invoice={selectedInvoice}
         isOpen={isInvoiceModalOpen}
-        onClose={() => setIsInvoiceModalOpen(false)}
+        onClose={closeInvoiceModal}
         onRefresh={() => {
           fetchDashboardData()
           if (selectedInvoice) handleOpenInvoiceModal(selectedInvoice.id)
@@ -423,9 +432,10 @@ export default function AdminDashboardPage() {
       {/* Invoicing Run Modal */}
       <RunBillingModal
         isOpen={isRunBillingOpen}
-        onClose={() => setIsRunBillingOpen(false)}
+        onClose={closeRunBilling}
         onSuccess={() => {
           fetchDashboardData()
+          showToast('Billing run batch completed successfully', 'success')
         }}
       />
     </div>

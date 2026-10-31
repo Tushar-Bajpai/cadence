@@ -3,8 +3,14 @@ import { apiHandler, ApiContext } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { InvoiceStatus, PayMethod } from '@prisma/client'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const portalPaymentSchema = z.object({
+  method: z.enum(['CARD', 'BANK_TRANSFER', 'UPI', 'CASH', 'CHEQUE']).default('CARD'),
+  note: z.string().optional().default('Settled via Customer Portal'),
+})
 
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const customer = await getPortalCustomer(session)
@@ -30,8 +36,8 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     return { success: true, message: 'Invoice is already paid in full.' }
   }
 
-  const body = await req.json().catch(() => ({}))
-  const { method = 'CARD', note = 'Settled via Customer Portal' } = body
+  const raw = await req.json().catch(() => ({}))
+  const { method, note } = portalPaymentSchema.parse(raw)
 
   const amountToPay = Number(invoice.total) - Number(invoice.amountPaid)
 

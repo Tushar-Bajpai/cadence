@@ -4,10 +4,20 @@ import React, { useState, useEffect } from 'react'
 import { TopNavbar } from '@/components/admin/top-navbar'
 import { RunBillingModal } from '@/components/admin/run-billing-modal'
 import { CustomerModal, CustomerModalData } from '@/components/admin/customer-modal'
+import { useAdminStore } from '@/stores/use-admin-store'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false)
-  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false)
+  const {
+    isRunBillingOpen,
+    closeRunBilling,
+    isCustomerModalOpen,
+    closeCustomerModal,
+    openCustomerModal,
+    toasts,
+    dismissToast,
+    triggerRefresh,
+  } = useAdminStore()
+
   const [customerData, setCustomerData] = useState<CustomerModalData | null>(null)
 
   // Fetch primary customer profile for the operations modal
@@ -34,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!customerData) {
       await fetchCustomerProfile()
     }
-    setIsCustomerModalOpen(true)
+    openCustomerModal()
   }
 
   return (
@@ -45,27 +55,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Top Navbar matching the uploaded reference image & landing page theme */}
       <TopNavbar
-        onRunBillingClick={() => setIsBillingModalOpen(true)}
         onCustomerModalClick={handleOpenCustomerModal}
       />
 
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 w-full pb-16">{children}</main>
 
-      {/* Global Modals */}
+      {/* Global Modals synced with Zustand store */}
       <RunBillingModal
-        isOpen={isBillingModalOpen}
-        onClose={() => setIsBillingModalOpen(false)}
+        isOpen={isRunBillingOpen}
+        onClose={closeRunBilling}
         onSuccess={() => {
-          // Triggers refresh in sub-views
+          triggerRefresh()
         }}
       />
 
       <CustomerModal
         isOpen={isCustomerModalOpen}
         customer={customerData}
-        onClose={() => setIsCustomerModalOpen(false)}
+        onClose={closeCustomerModal}
       />
+
+      {/* Global Zustand Toast Notifications */}
+      {toasts.length > 0 && (
+        <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              onClick={() => dismissToast(t.id)}
+              className={`pointer-events-auto px-4 py-3 rounded-2xl border text-xs shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200 cursor-pointer ${
+                t.type === 'error'
+                  ? 'bg-rose-950/80 border-rose-500/40 text-rose-200'
+                  : 'bg-[#120e28]/90 border-white/20 text-white'
+              }`}
+            >
+              <span>{t.message}</span>
+              <span className="text-[10px] opacity-40 hover:opacity-100">✕</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiHandler } from '@/lib/api'
 import { db } from '@/lib/db'
 import { formatCurrency } from '@/lib/format'
+import { createProductSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,25 +41,20 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
 })
 
 export const POST = apiHandler(null, async (req: NextRequest) => {
-  const body = await req.json()
-  const { name, type = 'service', salesPrice, costPrice = 0, notes, variants = [] } = body
-
-  if (!name || salesPrice === undefined) {
-    throw new Error('Name and salesPrice are required')
-  }
+  const data = createProductSchema.parse(await req.json())
 
   const product = await db.product.create({
     data: {
-      name,
-      type,
-      salesPrice: Number(salesPrice),
-      costPrice: Number(costPrice),
-      notes,
+      name: data.name,
+      type: data.type,
+      salesPrice: data.salesPrice,
+      costPrice: data.costPrice,
+      notes: data.notes,
       variants: {
-        create: variants.map((v: any) => ({
-          attribute: v.attribute || 'Addon',
+        create: data.variants.map((v) => ({
+          attribute: v.attribute,
           value: v.value,
-          extraPrice: Number(v.extraPrice) || 0,
+          extraPrice: v.extraPrice,
         })),
       },
     },

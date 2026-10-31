@@ -3,13 +3,22 @@
 import React, { useState, useEffect } from 'react'
 import { Package, Plus, Tag, Check, X, Layers, Clock, ShieldCheck } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
+import { useAdminStore } from '@/stores/use-admin-store'
 
 export default function ProductsPage() {
+  const {
+    isProductModalOpen,
+    openProductModal,
+    closeProductModal,
+    isPlanModalOpen,
+    openPlanModal,
+    closePlanModal,
+    showToast,
+  } = useAdminStore()
+
   const [products, setProducts] = useState<any[]>([])
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [isNewProductOpen, setIsNewProductOpen] = useState(false)
-  const [isNewPlanOpen, setIsNewPlanOpen] = useState(false)
 
   // Product form
   const [prodName, setProdName] = useState('')
@@ -64,12 +73,13 @@ export default function ProductsPage() {
         }),
       })
       if (!res.ok) throw new Error('Failed to create product')
-      setIsNewProductOpen(false)
+      closeProductModal()
       setProdName('')
       setSalesPrice('')
+      showToast('Product created successfully', 'success')
       fetchData()
     } catch (err: any) {
-      alert(err.message || 'Error creating product')
+      showToast(err.message || 'Error creating product', 'error')
     }
   }
 
@@ -89,12 +99,13 @@ export default function ProductsPage() {
         }),
       })
       if (!res.ok) throw new Error('Failed to create plan')
-      setIsNewPlanOpen(false)
+      closePlanModal()
       setPlanName('')
       setPlanPrice('')
+      showToast('Plan created successfully', 'success')
       fetchData()
     } catch (err: any) {
-      alert(err.message || 'Error creating plan')
+      showToast(err.message || 'Error creating plan', 'error')
     }
   }
 
@@ -116,7 +127,7 @@ export default function ProductsPage() {
           </div>
 
           <button
-            onClick={() => setIsNewProductOpen(true)}
+            onClick={openProductModal}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_4px_20px_rgba(137,120,255,0.4)] transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -196,7 +207,7 @@ export default function ProductsPage() {
           </div>
 
           <button
-            onClick={() => setIsNewPlanOpen(true)}
+            onClick={openPlanModal}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/20 bg-white/5 hover:bg-white/15 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer backdrop-blur-md"
           >
             <Plus className="w-4 h-4" />
@@ -252,12 +263,12 @@ export default function ProductsPage() {
       </div>
 
       {/* New Product Modal */}
-      {isNewProductOpen && (
+      {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
           <div className="w-full max-w-md bg-[#0e0c24] text-white rounded-3xl p-6 shadow-2xl border border-white/15 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="font-bold text-white text-sm">Add New Product</h3>
-              <button onClick={() => setIsNewProductOpen(false)}>
+              <button onClick={closeProductModal}>
                 <X className="w-4 h-4 text-white/50" />
               </button>
             </div>
@@ -322,7 +333,7 @@ export default function ProductsPage() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={() => setIsNewProductOpen(false)}
+                  onClick={closeProductModal}
                   className="px-4 py-2 rounded-full text-white/60 hover:text-white"
                 >
                   Cancel
@@ -340,12 +351,12 @@ export default function ProductsPage() {
       )}
 
       {/* New Plan Modal */}
-      {isNewPlanOpen && (
+      {isPlanModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
           <div className="w-full max-w-md bg-[#0e0c24] text-white rounded-3xl p-6 shadow-2xl border border-white/15 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="font-bold text-white text-sm">Add New Billing Plan</h3>
-              <button onClick={() => setIsNewPlanOpen(false)}>
+              <button onClick={closePlanModal}>
                 <X className="w-4 h-4 text-white/50" />
               </button>
             </div>
@@ -393,7 +404,7 @@ export default function ProductsPage() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={() => setIsNewPlanOpen(false)}
+                  onClick={closePlanModal}
                   className="px-4 py-2 rounded-full text-white/60 hover:text-white"
                 >
                   Cancel

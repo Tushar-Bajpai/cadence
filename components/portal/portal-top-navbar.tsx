@@ -14,24 +14,31 @@ import {
   IconLogout,
   IconExternalLink,
 } from '@tabler/icons-react'
+import { usePortalStore, PortalTab } from '@/stores/use-portal-store'
 
-export type PortalTab = 'billing' | 'subscriptions' | 'invoices' | 'catalog' | 'profile'
+export type { PortalTab }
 
 interface PortalTopNavbarProps {
-  activeTab: PortalTab
-  onTabChange: (tab: PortalTab) => void
+  activeTab?: PortalTab
+  onTabChange?: (tab: PortalTab) => void
   customerName?: string
-  searchQuery: string
-  onSearchChange: (q: string) => void
+  searchQuery?: string
+  onSearchChange?: (q: string) => void
 }
 
 export function PortalTopNavbar({
-  activeTab,
-  onTabChange,
+  activeTab: propActiveTab,
+  onTabChange: propOnTabChange,
   customerName = 'Subscriber',
-  searchQuery,
-  onSearchChange,
+  searchQuery: propSearchQuery,
+  onSearchChange: propOnSearchChange,
 }: PortalTopNavbarProps) {
+  const store = usePortalStore()
+  const activeTab = propActiveTab ?? store.activeTab
+  const onTabChange = propOnTabChange ?? store.setActiveTab
+  const searchQuery = propSearchQuery ?? store.searchQuery
+  const onSearchChange = propOnSearchChange ?? store.setSearchQuery
+
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
   // 5 tab icons using Tabler icons matching the InvoPilot reference mockup

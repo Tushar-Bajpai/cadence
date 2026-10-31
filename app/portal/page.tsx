@@ -8,6 +8,7 @@ import {
 import { PaymentCardModal } from '@/components/portal/payment-card-modal'
 import { CatalogView } from '@/components/portal/catalog-view'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
+import { usePortalStore } from '@/stores/use-portal-store'
 import {
   Rocket,
   Download,
@@ -32,8 +33,14 @@ import {
 } from 'lucide-react'
 
 export default function CustomerPortalPage() {
-  const [activeTab, setActiveTab] = useState<PortalTab>('billing')
-  const [searchQuery, setSearchQuery] = useState('')
+  const {
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    refreshKey,
+    triggerRefresh,
+  } = usePortalStore()
   const [loading, setLoading] = useState(true)
 
   // Portal Summary Data

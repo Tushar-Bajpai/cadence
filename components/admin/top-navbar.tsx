@@ -18,16 +18,23 @@ import {
   IconUser,
   IconShieldLock,
 } from '@tabler/icons-react'
+import { useAdminStore } from '@/stores/use-admin-store'
 
 interface TopNavbarProps {
-  onRunBillingClick: () => void
+  onRunBillingClick?: () => void
   onCustomerModalClick?: () => void
 }
 
 export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState('')
+  const store = useAdminStore()
+
+  const handleRunBilling = onRunBillingClick || store.openRunBilling
+  const handleCustomerModal = onCustomerModalClick || (() => store.openCustomerModal())
+
+  const searchQuery = store.searchQuery
+  const setSearchQuery = store.setSearchQuery
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
   // 5 navigation icon tabs matching reference screenshot:
@@ -160,7 +167,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
 
           {/* Quick Billing Engine Run Action */}
           <button
-            onClick={onRunBillingClick}
+            onClick={handleRunBilling}
             title="Execute Idempotent Billing Cycle"
             className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_2px_14px_rgba(137,120,255,0.35)] transition-all whitespace-nowrap cursor-pointer active:scale-95"
           >
@@ -183,7 +190,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                 <button
                   onClick={() => {
                     setShowSettingsMenu(false)
-                    onRunBillingClick()
+                    handleRunBilling()
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
                 >
@@ -193,7 +200,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                 <button
                   onClick={() => {
                     setShowSettingsMenu(false)
-                    if (onCustomerModalClick) onCustomerModalClick()
+                    handleCustomerModal()
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
                 >
@@ -230,7 +237,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
 
           {/* User profile avatar */}
           <button
-            onClick={onCustomerModalClick}
+            onClick={handleCustomerModal}
             title="Administrator Account"
             className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#1b1544] via-[#281e64] to-[#3a2c8a] border border-white/20 hover:border-[#8978ff] text-white/90 text-xs font-mono font-bold flex items-center justify-center shadow-inner hover:scale-105 transition-all cursor-pointer relative"
           >

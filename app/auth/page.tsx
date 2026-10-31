@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { CadenceLogo } from '@/components/cadence-logo'
+import { useAuthStore } from '@/stores/use-auth-store'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -48,6 +49,10 @@ export default function AuthPage() {
         setError(json.error || 'Something went wrong. Please try again.')
         setLoadingProvider(null)
         return
+      }
+
+      if (json?.user) {
+        useAuthStore.getState().setUser(json.user)
       }
 
       setIsSuccess(true)

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiHandler } from '@/lib/api'
 import { db } from '@/lib/db'
 import { DiscountType, DiscountScope, Prisma } from '@prisma/client'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,47 +35,55 @@ export const GET = apiHandler(null, async () => {
   }
 })
 
+const createDiscountInputSchema = z
+  .object({
+    name: z.string().min(1, 'Discount name is required').trim(),
+    type: z.enum(['PERCENTAGE', 'FIXED']).default('PERCENTAGE'),
+    value: z.coerce.number().positive('A positive discount value is required'),
+    scope: z.enum(['PRODUCT', 'SUBSCRIPTION']).default('SUBSCRIPTION'),
+    usageLimit: z.coerce.number().int().min(1).default(100),
+    days: z.coerce.number().int().min(1).default(30),
+    startDate: z.string().or(z.date()).optional(),
+    endDate: z.string().or(z.date()).optional(),
+    minPurchase: z.coerce.number().min(0).optional().nullable(),
+    minQuantity: z.coerce.number().int().min(1).optional().nullable(),
+    productIds: z.array(z.string()).optional().default([]),
+  })
+  .refine(
+    (data) => {
+      if (data.type === 'PERCENTAGE' && data.value > 100) return false
+      return true
+    },
+    {
+      message: 'A percentage discount cannot exceed 100%',
+      path: ['value'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.scope === 'PRODUCT' && (!data.productIds || data.productIds.length === 0)) return false
+      return true
+    },
+    {
+      message: 'Product-scoped discounts need at least one product',
+      path: ['productIds'],
+    }
+  )
+
 // ADMIN only: create a discount rule with full targeting:
-// type/value, scope (product list or whole subscription),
-// min purchase / min quantity, validity window and usage ceiling.
 export const POST = apiHandler(['ADMIN'], async (req: NextRequest) => {
-  const body = await req.json()
-
-  const name = String(body.name || '').trim()
-  if (!name) throw new Error('Discount name is required')
-
-  const type: DiscountType = body.type === 'FIXED' ? DiscountType.FIXED : DiscountType.PERCENTAGE
-  const value = Number(body.value)
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new Error('A positive discount value is required')
-  }
-  if (type === DiscountType.PERCENTAGE && value > 100) {
-    throw new Error('A percentage discount cannot exceed 100%')
-  }
-
-  const scope: DiscountScope =
-    body.scope === 'PRODUCT' ? DiscountScope.PRODUCT : DiscountScope.SUBSCRIPTION
-
-  const usageLimit = Math.max(1, Math.floor(Number(body.usageLimit) || 100))
-  const minPurchase =
-    body.minPurchase !== undefined && body.minPurchase !== null && body.minPurchase !== ''
-      ? new Prisma.Decimal(Number(body.minPurchase))
-      : null
-  const minQuantity =
-    body.minQuantity !== undefined && body.minQuantity !== null ? Math.floor(Number(body.minQuantity)) : null
-  if (minQuantity !== null && minQuantity < 1) {
-    throw new Error('Minimum quantity must be at least 1')
-  }
+  const data = createDiscountInputSchema.parse(await req.json())
 
   // Validity window: explicit dates, falling back to the "days" duration
-  const startDate = body.startDate ? new Date(body.startDate) : new Date()
-  const endDate = body.endDate
-    ? new Date(body.endDate)
+  const startDate = data.startDate ? new Date(data.startDate) : new Date()
+  const endDate = data.endDate
+    ? new Date(data.endDate)
     : (() => {
         const d = new Date(startDate)
-        d.setDate(d.getDate() + (Math.floor(Number(body.days)) || 30))
+        d.setDate(d.getDate() + (data.days || 30))
         return d
       })()
+
   if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
     throw new Error('Invalid validity dates')
   }
@@ -82,27 +91,24 @@ export const POST = apiHandler(['ADMIN'], async (req: NextRequest) => {
     throw new Error('End date must be on or after the start date')
   }
 
-  const productIds: string[] =
-    scope === DiscountScope.PRODUCT
-      ? Array.isArray(body.productIds)
-        ? body.productIds
-        : []
-      : []
-  if (scope === DiscountScope.PRODUCT && productIds.length === 0) {
-    throw new Error('Product-scoped discounts need at least one product')
-  }
+  const minPurchase =
+    data.minPurchase !== undefined && data.minPurchase !== null
+      ? new Prisma.Decimal(data.minPurchase)
+      : null
+
+  const productIds = data.scope === 'PRODUCT' ? data.productIds : []
 
   const discount = await db.discount.create({
     data: {
-      name,
-      type,
-      value,
-      scope,
+      name: data.name,
+      type: data.type as DiscountType,
+      value: data.value,
+      scope: data.scope as DiscountScope,
       minPurchase,
-      minQuantity,
+      minQuantity: data.minQuantity ?? null,
       startDate,
       endDate,
-      usageLimit,
+      usageLimit: data.usageLimit,
       usedCount: 0,
       isActive: true,
       ...(productIds.length > 0 && {

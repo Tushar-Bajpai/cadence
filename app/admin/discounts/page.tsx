@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Tag, Plus, X, Trash2, Power, Pencil, Loader2 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
+import { useAdminStore } from '@/stores/use-admin-store'
 
 interface DiscountRow {
   id: string
@@ -39,6 +40,7 @@ interface ProductRow {
 type Modal = 'discount' | 'tax' | null
 
 export default function DiscountsPage() {
+  const { showToast } = useAdminStore()
   const [discounts, setDiscounts] = useState<DiscountRow[]>([])
   const [taxes, setTaxes] = useState<TaxRow[]>([])
   const [products, setProducts] = useState<ProductRow[]>([])
@@ -138,8 +140,10 @@ export default function DiscountsPage() {
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(json.error || 'Failed to create discount')
       setModal(null)
+      showToast('Discount promotion created successfully', 'success')
       fetchData()
     } catch (err: any) {
+      showToast(err.message || 'Error creating discount', 'error')
       setError(err.message || 'Error creating discount')
     }
   }

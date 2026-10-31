@@ -4,8 +4,18 @@ import { db } from '@/lib/db'
 import { SubStatus } from '@prisma/client'
 import { isValidTransition, canPauseOrResume, canCloseEarly, canRenew } from '@/lib/subscription-state'
 import { addPeriod } from '@/lib/billing-period'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const transitionInputSchema = z
+  .object({
+    action: z.enum(['pause', 'resume', 'renew']).optional(),
+    targetStatus: z.enum(['DRAFT', 'QUOTATION', 'CONFIRMED', 'ACTIVE', 'CLOSED']).optional(),
+  })
+  .refine((data) => data.action || data.targetStatus, {
+    message: 'Either action or targetStatus is required',
+  })
 
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
@@ -13,8 +23,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   if (!id) throw new Error('Subscription ID is required')
 
-  const body = await req.json()
-  const { action, targetStatus } = body
+  const { action, targetStatus } = transitionInputSchema.parse(await req.json())
 
   const sub = await db.subscription.findUnique({
     where: { id },

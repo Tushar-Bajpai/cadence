@@ -2,8 +2,13 @@ import { NextRequest } from 'next/server'
 import { apiHandler, ApiContext } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const portalActionSchema = z.object({
+  action: z.enum(['pause', 'resume', 'close']),
+})
 
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const customer = await getPortalCustomer(session)
@@ -22,8 +27,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     throw new Error('Subscription not found or access denied')
   }
 
-  const body = await req.json()
-  const { action } = body
+  const { action } = portalActionSchema.parse(await req.json())
 
   if (action === 'pause') {
     if (!subscription.plan.pausable) {

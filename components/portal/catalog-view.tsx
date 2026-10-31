@@ -18,6 +18,7 @@ import {
   Info,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
+import { usePortalStore } from '@/stores/use-portal-store'
 
 interface PlanItem {
   id: string
@@ -69,11 +70,18 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
   const [existingSubs, setExistingSubs] = useState<ExistingSubscription[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Selection states
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
-  const [quantity, setQuantity] = useState(1)
+  // Zustand global configurator state
+  const {
+    selectedPlanId,
+    setSelectedPlanId,
+    selectedProductId,
+    setSelectedProductId,
+    selectedVariantId,
+    setSelectedVariantId,
+    quantity,
+    setQuantity,
+    resetConfigurator,
+  } = usePortalStore()
 
   // Subscribing target mode: 'new' or 'existing'
   const [targetMode, setTargetMode] = useState<'new' | 'existing'>('new')

@@ -2,8 +2,16 @@ import { NextRequest } from 'next/server'
 import { apiHandler, ApiContext } from '@/lib/api'
 import { db } from '@/lib/db'
 import { InvoiceStatus, PayMethod } from '@prisma/client'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const invoicePaymentInputSchema = z.object({
+  action: z.enum(['mark_unpaid', 'record_payment']).optional(),
+  amount: z.coerce.number().positive().optional(),
+  method: z.enum(['CARD', 'BANK_TRANSFER', 'UPI', 'CASH', 'CHEQUE']).default('CARD'),
+  note: z.string().optional(),
+})
 
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
@@ -18,8 +26,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   if (!invoice) throw new Error('Invoice not found')
 
-  const body = await req.json()
-  const { action, amount, method = PayMethod.CARD, note } = body
+  const { action, amount, method, note } = invoicePaymentInputSchema.parse(await req.json())
 
   // Mark as Unpaid action (matching button in screenshot 2: "✕ Mark as Unpaid")
   if (action === 'mark_unpaid') {

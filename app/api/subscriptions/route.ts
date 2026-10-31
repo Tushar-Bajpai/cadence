@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { SubStatus, Prisma } from '@prisma/client'
 import { formatSubNumber, formatCurrency } from '@/lib/format'
 import { addPeriod } from '@/lib/billing-period'
+import { createSubscriptionSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,47 +70,39 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
 })
 
 export const POST = apiHandler(null, async (req: NextRequest) => {
-  const body = await req.json()
-  const {
-    customerId,
-    planId,
-    startDate = new Date(),
-    expiryMonths = 12,
-    lines = [],
-    status = SubStatus.DRAFT,
-  } = body
+  const data = createSubscriptionSchema.parse(await req.json())
 
-  if (!customerId || !planId) {
-    throw new Error('customerId and planId are required')
-  }
-
-  const plan = await db.plan.findUnique({ where: { id: planId } })
+  const plan = await db.plan.findUnique({ where: { id: data.planId } })
   if (!plan) throw new Error('Plan not found')
 
-  const start = new Date(startDate)
+  const start = data.startDate ? new Date(data.startDate) : new Date()
   const expiry = new Date(start)
-  expiry.setMonth(expiry.getMonth() + (Number(expiryMonths) || 12))
+  expiry.setMonth(expiry.getMonth() + data.expiryMonths)
 
-  const nextBilling = status === SubStatus.ACTIVE ? start : null
+  const nextBilling = data.status === SubStatus.ACTIVE ? start : null
 
   const newSub = await db.subscription.create({
     data: {
-      customerId,
-      planId,
-      status,
+      customerId: data.customerId,
+      planId: data.planId,
+      status: data.status as SubStatus,
       startDate: start,
       expiryDate: expiry,
       nextBillingDate: nextBilling,
       lines: {
-        create: lines.map((l: any) => ({
-          productId: l.productId,
-          variantId: l.variantId || null,
-          description: l.description || plan.name,
-          quantity: Number(l.quantity) || 1,
-          unitPrice: Number(l.unitPrice) || Number(plan.price),
-          taxRate: Number(l.taxRate) || 0,
-          amount: (Number(l.quantity) || 1) * (Number(l.unitPrice) || Number(plan.price)),
-        })),
+        create: data.lines.map((l) => {
+          const qty = l.quantity
+          const unit = l.unitPrice !== undefined ? l.unitPrice : Number(plan.price)
+          return {
+            productId: l.productId,
+            variantId: l.variantId || null,
+            description: l.description || plan.name,
+            quantity: qty,
+            unitPrice: unit,
+            taxRate: l.taxRate,
+            amount: qty * unit,
+          }
+        }),
       },
     },
     include: {
