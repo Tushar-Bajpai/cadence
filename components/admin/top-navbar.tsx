@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Tag,
   User,
+  FileText,
 } from 'lucide-react'
 
 interface TopNavbarProps {
@@ -59,6 +60,11 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
       name: 'Taxes & Discounts',
       href: '/admin/discounts',
       icon: Tag,
+    },
+    {
+      name: 'Quotation Templates',
+      href: '/admin/templates',
+      icon: FileText,
     },
   ]
 
