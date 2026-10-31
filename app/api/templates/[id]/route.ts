@@ -55,7 +55,9 @@ export const GET = apiHandler(['ADMIN', 'STAFF'], async (_req: NextRequest, _ses
   }
 })
 
-// Delete template lines then the template itself (atomically)
+
+// Delete template lines then the template itself
+
 export const DELETE = apiHandler(['ADMIN', 'STAFF'], async (_req: NextRequest, _session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string

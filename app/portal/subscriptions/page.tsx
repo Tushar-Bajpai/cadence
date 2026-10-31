@@ -16,6 +16,7 @@ import {
   Calendar,
   Layers,
 } from 'lucide-react'
+import { CardSkeletonGrid } from '@/components/ui/skeleton'
 
 export default function PortalSubscriptionsPage() {
   const router = useRouter()
@@ -146,11 +147,7 @@ export default function PortalSubscriptionsPage() {
 
         {/* Subscriptions List */}
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="h-44 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
-            ))}
-          </div>
+          <CardSkeletonGrid count={2} />
         ) : filtered.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {filtered.map((sub) => (
@@ -289,4 +286,3 @@ export default function PortalSubscriptionsPage() {
     </div>
   )
 }
-

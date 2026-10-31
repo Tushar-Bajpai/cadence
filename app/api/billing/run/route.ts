@@ -1,39 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { apiHandler } from '@/lib/api'
 import { runBillingBatch } from '@/lib/billing-run'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
+const runBillingInputSchema = z.object({
+  batchSize: z.coerce.number().int().min(1).max(1000).default(100),
+  targetDate: z.string().or(z.date()).optional(),
+})
+
 // Admin/staff only: executes the invoicing batch.
 export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
-  let batchSize = 100
-  let targetDate = new Date()
+  let parsed: { batchSize: number; targetDate?: string | Date } = { batchSize: 100 }
 
   try {
-    const body = await req.json()
-    if (body.batchSize !== undefined) {
-      batchSize = Number(body.batchSize)
-      if (!Number.isFinite(batchSize) || batchSize < 1 || batchSize > 500) {
-        return NextResponse.json(
-          { error: 'batchSize must be a number between 1 and 500' },
-          { status: 400 }
-        )
-      }
+
+    const raw = await req.json()
+    if (raw && typeof raw === 'object') {
+      parsed = runBillingInputSchema.parse(raw)
     }
-    if (body.targetDate !== undefined) {
-      targetDate = new Date(body.targetDate)
-      if (isNaN(targetDate.getTime())) {
-        return NextResponse.json(
-          { error: 'targetDate must be a valid ISO date string' },
-          { status: 400 }
-        )
-      }
-    }
-  } catch {
-    // optional body
+  } catch (e: any) {
+    if (e instanceof z.ZodError) throw e
+    // If empty body, defaults apply
+
   }
 
-  const result = await runBillingBatch(targetDate, batchSize)
+  const targetDate = parsed.targetDate ? new Date(parsed.targetDate) : new Date()
+  const result = await runBillingBatch(targetDate, parsed.batchSize)
   return {
     success: true,
     message: `Billing batch executed. Created ${result.created} invoices, skipped ${result.skipped}, failed ${result.failed}.`,

@@ -324,8 +324,8 @@ async function runPhase9Tests() {
   })
   console.log(`   Created test overdue invoice #${overdueInvoice.seq} (Total: ₹${overdueInvoice.total}, Due: ${pastDueDate.toISOString()})`)
 
-  // Fetch summary again to verify it appears in overdue list
-  const summaryWithOverdueRes = await getSummary(makeReq('/api/reports/summary', adminToken))
+  // Fetch summary again to verify it appears in overdue list (scoped to customer)
+  const summaryWithOverdueRes = await getSummary(makeReq(`/api/reports/summary?customerId=${customer.id}`, adminToken))
   const summaryWithOverdue = await summaryWithOverdueRes.json()
   const foundOverdue = summaryWithOverdue.overdueInvoices.find((i: any) => i.id === overdueInvoice.id)
   if (!foundOverdue) {
@@ -370,7 +370,7 @@ async function runPhase9Tests() {
   console.log(`   [PASS] Invoice #${updatedInvoice.seq} updated to status PAID in database.`)
 
   // Verify dashboard summary reflects updated revenue and cleared overdue
-  const finalSummaryRes = await getSummary(makeReq('/api/reports/summary', adminToken))
+  const finalSummaryRes = await getSummary(makeReq(`/api/reports/summary?customerId=${customer.id}`, adminToken))
   const finalSummary = await finalSummaryRes.json()
   const clearedOverdue = finalSummary.overdueInvoices.find((i: any) => i.id === overdueInvoice.id)
   if (clearedOverdue) {

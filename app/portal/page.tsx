@@ -9,6 +9,7 @@ import { PaymentCardModal } from '@/components/portal/payment-card-modal'
 import { RazorpayPaymentModal } from '@/components/razorpay-payment-modal'
 import { CatalogView } from '@/components/portal/catalog-view'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
+import { usePortalStore } from '@/stores/use-portal-store'
 import {
   Rocket,
   Download,
@@ -30,11 +31,24 @@ import {
   MapPin,
   Check,
   Building,
+  LogOut,
+  ReceiptText,
+  UserPlus,
+  PauseCircle,
+  CircleCheck,
 } from 'lucide-react'
+import { useAuthStore } from '@/stores/use-auth-store'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function CustomerPortalPage() {
-  const [activeTab, setActiveTab] = useState<PortalTab>('billing')
-  const [searchQuery, setSearchQuery] = useState('')
+  const {
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    refreshKey,
+    triggerRefresh,
+  } = usePortalStore()
   const [loading, setLoading] = useState(true)
 
   // Portal Summary Data
@@ -334,7 +348,15 @@ export default function CustomerPortalPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Current Plan Card */}
                 <div className="rounded-3xl bg-white/[0.03] backdrop-blur-md border border-white/10 p-6 flex flex-col justify-between hover:border-white/15 transition relative overflow-hidden">
-                  {summaryData?.currentPlan ? (
+                  {loading ? (
+                    <div className="space-y-5" aria-hidden="true">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-7 w-40" />
+                      <Skeleton className="h-10 w-32" />
+                      <Skeleton className="h-3 w-48" />
+                      <Skeleton className="h-9 w-40 rounded-2xl" />
+                    </div>
+                  ) : summaryData?.currentPlan ? (
                     <>
                       <div className="flex items-start justify-between">
                         <div>
@@ -441,7 +463,14 @@ export default function CustomerPortalPage() {
                       Usage & Billing Cycle
                     </span>
 
-                    <div className="mt-5 space-y-5">
+                    {loading ? (
+                      <div className="mt-5 space-y-6" aria-hidden="true">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-2 w-full rounded-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-2 w-full rounded-full" />
+                      </div>
+                    ) : <div className="mt-5 space-y-5">
                       {/* Meter 1: Billing Cycle Progress */}
                       <div>
                         <div className="flex items-center justify-between text-xs mb-1.5">
@@ -479,7 +508,7 @@ export default function CustomerPortalPage() {
                           Settled Invoices Rate
                         </span>
                       </div>
-                    </div>
+                    </div>}
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-white/10 text-[11px] text-white/40 flex items-center justify-between">
@@ -963,20 +992,33 @@ export default function CustomerPortalPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in duration-200">
             {/* Left Card: Robert Fox Profile matching Image 3 */}
             <div className="lg:col-span-5 rounded-3xl bg-[#0e0c24] border border-white/10 p-6 flex flex-col space-y-6">
-              {/* Profile Header */}
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 flex items-center justify-center text-amber-950 font-bold text-xl shadow-md">
-                  <span>{profileData.name.slice(0, 2).toUpperCase()}</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">{profileData.name}</h3>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="w-2 h-2 rounded-full bg-[#8978ff] inline-block shadow-[0_0_8px_rgba(137,120,255,0.8)]" />
-                    <span className="text-xs font-semibold text-[#a79aff]">
-                      {profileData.role}
-                    </span>
+              {/* Profile Header with Sign Out Button */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 flex items-center justify-center text-amber-950 font-bold text-xl shadow-md">
+                    <span>{profileData.name.slice(0, 2).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{profileData.name}</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="w-2 h-2 rounded-full bg-[#8978ff] inline-block shadow-[0_0_8px_rgba(137,120,255,0.8)]" />
+                      <span className="text-xs font-semibold text-[#a79aff]">
+                        {profileData.role}
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                <button
+                  onClick={async () => {
+                    await useAuthStore.getState().logout()
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer active:scale-95"
+                  title="Sign out of your customer account"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>Sign Out</span>
+                </button>
               </div>
 
               {/* Meta information matching Screenshot 2 */}
@@ -1005,37 +1047,59 @@ export default function CustomerPortalPage() {
                   Activity Timeline
                 </h4>
 
-                <div className="space-y-5 text-xs">
+                <div className="space-y-6 text-xs">
                   {profileData.activity?.map((group: any, idx: number) => (
                     <div key={idx} className="space-y-3">
-                      <span className="text-[11px] text-white/40 font-mono block">
-                        {group.date}
-                      </span>
-                      {group.events?.map((ev: any) => (
-                        <div key={ev.id} className="flex items-start gap-3 pl-1">
-                          <span
-                            className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${
-                              ev.color === 'purple'
-                                ? 'bg-[#8978ff]'
-                                : ev.color === 'amber'
-                                ? 'bg-amber-400'
-                                : ev.color === 'blue'
-                                ? 'bg-blue-400'
-                                : 'bg-pink-400'
-                            }`}
-                          />
-                          <div>
-                            <p className="text-white/80">
-                              <strong className="text-white">{ev.actor}</strong> {ev.action}
-                            </p>
-                            {ev.body && (
-                              <p className="mt-1 text-white/50 text-[11px] bg-white/[0.02] p-2 rounded-xl border border-white/5">
-                                {ev.body}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
+                          {group.date}
+                        </span>
+                        <span className="h-px flex-1 bg-white/10" />
+                        <span className="text-[10px] text-white/30">
+                          {group.events?.length ?? 0} {group.events?.length === 1 ? 'event' : 'events'}
+                        </span>
+                      </div>
+
+                      <div className="relative space-y-3 pl-1">
+                        <span className="absolute bottom-4 left-[15px] top-4 w-px bg-gradient-to-b from-[#8978ff]/50 via-white/10 to-transparent" />
+                        {group.events?.map((ev: any) => {
+                          const EventIcon =
+                            ev.type === 'subscription'
+                              ? UserPlus
+                              : ev.type === 'invoice'
+                              ? ReceiptText
+                              : ev.type === 'payment'
+                              ? CircleCheck
+                              : PauseCircle
+                          const tone =
+                            ev.color === 'amber'
+                              ? 'text-amber-300 bg-amber-400/10 border-amber-400/20'
+                              : ev.color === 'blue'
+                              ? 'text-blue-300 bg-blue-400/10 border-blue-400/20'
+                              : ev.color === 'pink'
+                              ? 'text-pink-300 bg-pink-400/10 border-pink-400/20'
+                              : 'text-[#a79aff] bg-[#8978ff]/10 border-[#8978ff]/20'
+
+                          return (
+                            <div key={ev.id} className="relative flex items-start gap-3">
+                              <div className={`relative z-10 grid size-7 shrink-0 place-items-center rounded-full border ${tone}`}>
+                                <EventIcon className="size-3.5" />
+                              </div>
+                              <div className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.025] px-3 py-2.5 transition hover:border-white/20 hover:bg-white/[0.045]">
+                                <p className="leading-relaxed text-white/75">
+                                  <strong className="font-semibold text-white">{ev.actor}</strong>{' '}
+                                  {ev.action}
+                                </p>
+                                {ev.body && (
+                                  <p className="mt-1.5 leading-relaxed text-[11px] text-white/45">
+                                    {ev.body}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>

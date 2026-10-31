@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { X, CreditCard, ShieldCheck } from 'lucide-react'
+import { paymentCardInputSchema } from '@/lib/validators'
 
 interface PaymentCardModalProps {
   isOpen: boolean
@@ -14,12 +15,28 @@ export function PaymentCardModal({ isOpen, onClose, onSuccess }: PaymentCardModa
   const [cardHolder, setCardHolder] = useState('')
   const [expiry, setExpiry] = useState('')
   const [cvc, setCvc] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!isOpen) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+
+    // Zod client input validation
+    const valResult = paymentCardInputSchema.safeParse({
+      cardNumber,
+      cardholder: cardHolder,
+      validThru: expiry,
+      cvv: cvc,
+    })
+
+    if (!valResult.success) {
+      setError(valResult.error.issues[0]?.message || 'Invalid card information')
+      return
+    }
+
     setIsSubmitting(true)
     setTimeout(() => {
       setIsSubmitting(false)
@@ -55,6 +72,12 @@ export function PaymentCardModal({ isOpen, onClose, onSuccess }: PaymentCardModa
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="px-3.5 py-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-medium text-white/70 mb-1.5">
               Cardholder Name

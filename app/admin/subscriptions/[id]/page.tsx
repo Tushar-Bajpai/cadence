@@ -24,6 +24,7 @@ import {
   User,
   ExternalLink,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatDate } from '@/lib/format'
 
 const STEPS = ['DRAFT', 'QUOTATION', 'CONFIRMED', 'ACTIVE', 'CLOSED']
@@ -200,12 +201,16 @@ export default function SubscriptionDetailPage({
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="size-8 animate-spin rounded-full border-2 border-[#8978ff] border-t-transparent" />
-          <p className="text-xs font-mono uppercase tracking-[0.18em] text-white/50">
-            Loading Subscription Details...
-          </p>
+      <div className="mx-auto max-w-6xl space-y-6 px-6 py-8" aria-busy="true">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-10 w-72" />
+        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-52" />
+            <Skeleton className="h-8 w-28 rounded-full" />
+          </div>
+          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-56 w-full rounded-2xl" />
         </div>
       </div>
     )
@@ -767,4 +772,3 @@ export default function SubscriptionDetailPage({
     </div>
   )
 }
-

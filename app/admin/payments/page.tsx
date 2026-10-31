@@ -15,6 +15,7 @@ import {
   Filter,
 } from 'lucide-react'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
+import { TableSkeleton } from '@/components/ui/skeleton'
 
 interface PaymentItem {
   id: string
@@ -224,14 +225,7 @@ export default function PaymentsPage() {
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
               {loading && payments.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-10 text-center text-white/40 font-mono">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-[#8978ff] border-t-transparent rounded-full animate-spin" />
-                      Loading payments...
-                    </div>
-                  </td>
-                </tr>
+                <TableSkeleton columns={8} rows={6} />
               ) : payments.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-10 text-center text-white/40 font-mono">

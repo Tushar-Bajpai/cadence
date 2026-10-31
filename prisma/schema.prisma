@@ -64,8 +64,6 @@ model User {
   email            String    @unique // lowercase before saving
   passwordHash     String
   role             Role      @default(CUSTOMER)
-  resetTokenHash   String?
-  resetTokenExpiry DateTime?
   resetOtpHash     String? // SHA-256 of the 6-digit OTP (never store the OTP itself)
   resetOtpExpiry   DateTime? // OTP is valid for 10 minutes after issue
   resetOtpAttempts Int       @default(0) // wrong-OTP counter, resets on new OTP
@@ -211,6 +209,8 @@ model Subscription {
 
   @@index([status])
   @@index([customerId])
+  @@index([planId])
+  @@index([status, planId])
   @@index([status, isPaused, nextBillingDate]) // the billing-run query
 }
 
@@ -303,5 +303,7 @@ model Payment {
   recordedById String?
 
   @@index([invoiceId])
+  @@index([customerId])
   @@index([date])
+  @@index([customerId, date])
 }

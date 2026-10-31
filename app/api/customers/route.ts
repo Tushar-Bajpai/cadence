@@ -3,6 +3,8 @@ import { apiHandler, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { getCustomerActivity } from '@/lib/customer-activity'
+import { createCustomerSchema } from '@/lib/validators'
+import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,4 +72,40 @@ export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
       formattedTotalSpent: formatCurrency(totalSpent),
     }
   })
+})
+
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
+  const data = createCustomerSchema.parse(await req.json())
+
+  // Generate a random temporary password hash for the user
+  const randomPass = Math.random().toString(36).slice(-10) + 'A1!'
+  const passwordHash = await bcrypt.hash(randomPass, 10)
+
+  const user = await db.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      passwordHash,
+      role: 'CUSTOMER',
+      customer: {
+        create: {
+          companyName: data.companyName,
+          phone: data.phone,
+          address: data.address,
+        },
+      },
+    },
+    include: { customer: true },
+  })
+
+  return {
+    success: true,
+    customer: {
+      id: user.customer?.id,
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      companyName: user.customer?.companyName,
+    },
+  }
 })

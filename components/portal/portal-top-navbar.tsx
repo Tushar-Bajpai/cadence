@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   IconSmartHome,
@@ -14,8 +14,10 @@ import {
   IconLogout,
   IconExternalLink,
 } from '@tabler/icons-react'
+import { usePortalStore, PortalTab } from '@/stores/use-portal-store'
+import { useAuthStore } from '@/stores/use-auth-store'
 
-export type PortalTab = 'billing' | 'subscriptions' | 'invoices' | 'catalog' | 'profile'
+export type { PortalTab }
 
 interface PortalTopNavbarProps {
   activeTab: PortalTab
@@ -26,15 +28,26 @@ interface PortalTopNavbarProps {
 }
 
 export function PortalTopNavbar({
-  activeTab,
-  onTabChange,
+  activeTab: propActiveTab,
+  onTabChange: propOnTabChange,
   customerName = 'Subscriber',
-  searchQuery = '',
-  onSearchChange,
+  searchQuery: propSearchQuery,
+  onSearchChange: propOnSearchChange,
 }: PortalTopNavbarProps) {
+  const store = usePortalStore()
+  const activeTab = propActiveTab ?? store.activeTab
+  const onTabChange = propOnTabChange ?? store.setActiveTab
+  const searchQuery = propSearchQuery ?? store.searchQuery
+  const onSearchChange = propOnSearchChange ?? store.setSearchQuery
+  const { user, fetchUser } = useAuthStore()
+
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
-  // 5 tab icons using Tabler icons matching the InvoPilot reference mockup
+  useEffect(() => {
+    if (!user) void fetchUser()
+  }, [fetchUser, user])
+
+  // 5 tab icons matching the reference mockup (Image 2)
   const navTabs = [
     {
       id: 'billing' as PortalTab,
@@ -71,7 +84,7 @@ export function PortalTopNavbar({
   return (
     <header className="sticky top-0 z-40 w-full bg-[#08061d]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3 select-none">
       <div className="w-full flex items-center justify-between gap-4">
-        {/* Left Section: 4-Dots Emblem + Brand Name + 5 Tabler Icon Navigation Tabs */}
+        {/* Left Section: 4-Dots Emblem + Brand Name + 5 Icon Navigation Tabs */}
         <div className="flex items-center gap-5 sm:gap-7 shrink-0">
           <Link
             href="/portal"
@@ -85,16 +98,13 @@ export function PortalTopNavbar({
               <span className="w-2 h-2 rounded-full bg-white group-hover:bg-[#8978ff] transition-colors" />
             </div>
             <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+              <span className="text-base sm:text-lg font-bold tracking-tight text-white">
                 Cadence
-                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-[#8978ff]/20 text-[#8978ff] font-semibold border border-[#8978ff]/30">
-                  Portal
-                </span>
               </span>
             </div>
           </Link>
 
-          {/* 5 Tabler Icon Navigation Buttons */}
+          {/* 5 Squircle Icon Navigation Buttons matching Image 2 */}
           <nav className="flex items-center gap-1.5 sm:gap-2">
             {navTabs.map((item) => {
               const Icon = item.icon
@@ -109,9 +119,9 @@ export function PortalTopNavbar({
                     }
                   }}
                   title={item.label}
-                  className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                  className={`relative w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
                     active
-                      ? 'bg-[#8978ff] text-white shadow-[0_0_16px_rgba(137,120,255,0.45)]'
+                      ? 'bg-[#8978ff] text-white shadow-[0_0_20px_rgba(137,120,255,0.45)] ring-1 ring-[#8978ff]/40'
                       : 'bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/[0.08] border border-white/5'
                   }`}
                 >
@@ -122,38 +132,40 @@ export function PortalTopNavbar({
           </nav>
         </div>
 
-        {/* Center / Right: Search Bar + Admin Studio + Settings Gear */}
-        <div className="flex items-center gap-2.5">
-          {/* Pill Search Input */}
-          <div className="relative hidden md:block w-48 lg:w-72">
+        {/* Right Section: Search Bar + Admin Studio + Settings Gear (Exact order matching user screenshot) */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Search Bar placed before Admin Studio matching user screenshot */}
+          <div className="relative hidden md:block w-48 lg:w-64">
             <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" stroke={1.8} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
               placeholder="Search invoices, plans..."
-              className="w-full h-9 bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-4 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition"
+              className="w-full h-10 bg-white/[0.04] border border-white/10 rounded-2xl pl-9 pr-4 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition"
             />
           </div>
 
-          {/* Quick Switch to Admin Studio */}
-          <Link
-            href="/admin"
-            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white/[0.04] border border-white/10 text-white/70 hover:text-white hover:bg-white/[0.08] hover:border-white/20 text-xs font-medium transition cursor-pointer"
-            title="Switch to Admin Studio"
-          >
-            <IconShieldLock size={16} stroke={1.8} className="text-[#8978ff]" />
-            <span>Admin Studio</span>
-          </Link>
+          {/* Admin Studio is only offered to authorized operations users. */}
+          {(user?.role === 'ADMIN' || user?.role === 'STAFF') && (
+            <Link
+              href="/admin"
+              className="hidden sm:inline-flex items-center gap-1.5 h-10 px-4 rounded-2xl bg-white/[0.04] border border-white/10 text-white/75 hover:text-white hover:bg-white/[0.08] hover:border-white/20 text-xs font-medium transition cursor-pointer"
+              title="Switch to Admin Studio"
+            >
+              <IconShieldLock className="w-4 h-4 text-[#8978ff]" stroke={1.8} />
+              <span>Admin Studio</span>
+            </Link>
+          )}
 
           {/* Settings Menu Button */}
           <div className="relative">
             <button
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-              className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.08] flex items-center justify-center transition cursor-pointer"
+              className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.08] flex items-center justify-center transition cursor-pointer"
               title="Customer Settings"
             >
-              <IconSettings size={18} stroke={1.8} />
+              <IconSettings className="w-4 h-4" stroke={1.8} />
             </button>
 
             {showSettingsMenu && (
@@ -171,7 +183,7 @@ export function PortalTopNavbar({
                   onClick={() => setShowSettingsMenu(false)}
                   className="w-full text-left px-3.5 py-2 text-white/80 hover:text-white hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
                 >
-                  <IconUser size={16} stroke={1.8} className="text-[#8978ff]" />
+                  <IconUser className="w-4 h-4 text-[#8978ff]" stroke={1.8} />
                   <span>My Profile & Activity</span>
                 </Link>
 
@@ -179,19 +191,22 @@ export function PortalTopNavbar({
                   href="/"
                   className="w-full text-left px-3.5 py-2 text-white/80 hover:text-white hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
                 >
-                  <IconExternalLink size={16} stroke={1.8} className="text-white/40" />
+                  <IconExternalLink className="w-4 h-4 text-white/40" stroke={1.8} />
                   <span>Landing Magazine</span>
                 </Link>
 
                 <div className="my-1 border-t border-white/10" />
 
-                <Link
-                  href="/auth"
-                  className="w-full text-left px-3.5 py-2 text-rose-300 hover:text-rose-200 hover:bg-rose-500/10 transition flex items-center gap-2 cursor-pointer"
+                <button
+                  onClick={async () => {
+                    setShowSettingsMenu(false)
+                    await useAuthStore.getState().logout()
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-rose-300 hover:text-rose-200 hover:bg-rose-500/10 rounded-xl transition flex items-center gap-2 cursor-pointer font-medium"
                 >
-                  <IconLogout size={16} stroke={1.8} />
+                  <IconLogout className="w-4 h-4 text-rose-400" stroke={1.8} />
                   <span>Sign Out</span>
-                </Link>
+                </button>
               </div>
             )}
           </div>

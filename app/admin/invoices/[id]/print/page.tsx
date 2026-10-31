@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Clean print view (plan Phase 6: "Print = a clean /admin/invoices/[id]/print
 // page styled for window.print()"). Data comes from the same detail payload as
@@ -32,8 +33,11 @@ export default function PrintInvoicePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] grid place-items-center text-sm text-white/50 font-mono">
-        Loading invoice…
+      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8 space-y-5" aria-busy="true">
+        <Skeleton className="h-10 w-56" />
+        <Skeleton className="h-6 w-80" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
       </div>
     )
   }

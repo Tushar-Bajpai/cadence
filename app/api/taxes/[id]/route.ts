@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiHandler, ApiContext } from '@/lib/api'
 import { db } from '@/lib/db'
 import { TaxType } from '@prisma/client'
+import { updateTaxSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,39 +12,23 @@ export const PATCH = apiHandler(['ADMIN'], async (req: NextRequest, _session, co
   const id = params?.id as string
   if (!id) throw new Error('Tax ID is required')
 
-  const body = await req.json()
+  const parsed = updateTaxSchema.parse(await req.json())
   const data: { name?: string; type?: TaxType; value?: number; isActive?: boolean } = {}
 
-  if (body.name !== undefined) {
-    const name = String(body.name).trim()
-    if (!name) throw new Error('Tax name cannot be empty')
-    data.name = name
-  }
-  if (body.type !== undefined) {
-    if (body.type !== 'PERCENTAGE' && body.type !== 'FIXED') {
-      throw new Error('Tax type must be PERCENTAGE or FIXED')
-    }
-    data.type = body.type as TaxType
-  }
-  if (body.value !== undefined) {
-    const value = Number(body.value)
-    if (!Number.isFinite(value) || value < 0) {
-      throw new Error('A non-negative tax value is required')
-    }
-    const effectiveType = data.type ?? undefined
-    // Guard percentage ceiling (only when the update also sets the type;
-    // when only the value changes, re-read the current type)
-    if (value > 100) {
+  if (parsed.name !== undefined) data.name = parsed.name
+  if (parsed.type !== undefined) data.type = parsed.type as TaxType
+  if (parsed.value !== undefined) {
+    if (parsed.value > 100) {
       const current = data.type
-        ? effectiveType
+        ? data.type
         : (await db.tax.findUnique({ where: { id }, select: { type: true } }))?.type
       if (current === TaxType.PERCENTAGE) {
         throw new Error('A percentage tax cannot exceed 100%')
       }
     }
-    data.value = value
+    data.value = parsed.value
   }
-  if (body.isActive !== undefined) data.isActive = Boolean(body.isActive)
+  if (parsed.isActive !== undefined) data.isActive = parsed.isActive
 
   const tax = await db.tax.update({ where: { id }, data })
 

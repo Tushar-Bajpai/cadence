@@ -5,7 +5,7 @@ import { formatCurrency } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
 
@@ -128,4 +128,3 @@ export const DELETE = apiHandler(['ADMIN'], async (req: NextRequest, session, co
   await db.product.delete({ where: { id } })
   return { success: true, message: 'Product deleted permanently.' }
 })
-

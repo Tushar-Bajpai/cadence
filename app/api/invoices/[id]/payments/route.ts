@@ -2,8 +2,16 @@ import { NextRequest } from 'next/server'
 import { apiHandler, ApiContext, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { InvoiceStatus, InvoiceStatus as S, PayMethod, Prisma } from '@prisma/client'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const invoicePaymentInputSchema = z.object({
+  action: z.enum(['mark_unpaid', 'record_payment']).optional(),
+  amount: z.coerce.number().positive().optional(),
+  method: z.enum(['CARD', 'BANK_TRANSFER', 'UPI', 'CASH', 'CHEQUE']).default('CARD'),
+  note: z.string().optional(),
+})
 
 // Record a payment against a CONFIRMED invoice (admin/staff only).
 // Rules (plan Phase 7): reject on draft/cancelled/paid or overpayment;
@@ -19,13 +27,26 @@ export const POST = apiHandler(['ADMIN', 'STAFF'], async (
   const idOrSeq = params?.id as string
   if (!idOrSeq) throw new ApiError(400, 'Invoice ID is required')
 
-  const body = await req.json().catch(() => ({}))
-  const method = body?.method as PayMethod
-  if (method && !Object.values(PayMethod).includes(method)) {
-    throw new ApiError(400, 'Invalid payment method')
-  }
-
   const isNumeric = /^\d+$/.test(idOrSeq)
+  const body = await req.json()
+  const { action, amount: inputAmount, method, note } = invoicePaymentInputSchema.parse(body)
+
+  // Handle Mark as Unpaid action
+  if (action === 'mark_unpaid') {
+    const invoice = await db.invoice.findFirst({
+      where: isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq },
+    })
+    if (!invoice) throw new Error('Invoice not found')
+
+    const updated = await db.invoice.update({
+      where: { id: invoice.id },
+      data: {
+        status: InvoiceStatus.CONFIRMED,
+        amountPaid: 0,
+      },
+    })
+    return { success: true, message: 'Invoice marked as unpaid', invoice: updated }
+  }
 
   const result = await db.$transaction(
     async (tx) => {
@@ -45,8 +66,10 @@ export const POST = apiHandler(['ADMIN', 'STAFF'], async (
         throw new ApiError(400, 'Invoice is already fully paid')
       }
 
-      const outstanding = new Prisma.Decimal(invoice.total).minus(invoice.amountPaid)
-      const amount = body?.amount != null ? new Prisma.Decimal(Number(body.amount)) : outstanding
+
+    const outstanding = new Prisma.Decimal(invoice.total).minus(invoice.amountPaid)
+    const amount = inputAmount != null ? new Prisma.Decimal(Number(inputAmount)) : outstanding
+
 
       if (!Number.isFinite(Number(body?.amount ?? 1))) {
         throw new ApiError(400, 'Payment amount must be a valid number')
@@ -61,17 +84,19 @@ export const POST = apiHandler(['ADMIN', 'STAFF'], async (
         )
       }
 
-      const payment = await tx.payment.create({
-        data: {
-          invoiceId: invoice.id,
-          customerId: invoice.customerId,
-          method: method ?? PayMethod.CARD,
-          amount: amount.toDecimalPlaces(2),
-          date: new Date(),
-          note: body?.note || `Payment recorded by ${session?.name || 'admin'}`,
-          recordedById: session?.userId || null,
-        },
-      })
+
+    const payment = await tx.payment.create({
+      data: {
+        invoiceId: invoice.id,
+        customerId: invoice.customerId,
+        method: (method as PayMethod) ?? PayMethod.CARD,
+        amount: amount.toDecimalPlaces(2),
+        date: new Date(),
+        note: note || `Payment recorded by ${session?.name || 'admin'}`,
+        recordedById: session?.userId || null,
+      },
+    })
+
 
       // Recompute from the ledger, never from client math.
       const aggregate = await tx.payment.aggregate({

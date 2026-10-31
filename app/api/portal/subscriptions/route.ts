@@ -5,6 +5,7 @@ import { getPortalCustomer } from '@/lib/portal-customer'
 import { formatCurrency, formatDate, formatSubNumber } from '@/lib/format'
 import { addPeriod } from '@/lib/billing-period'
 import { getUnitPrice } from '@/lib/pricing'
+import { portalCreateSubscriptionSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,10 +69,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session) => {
   const customer = await getPortalCustomer(session)
   if (!customer) throw new UnauthorizedError('Customer not authenticated')
 
-  const body = await req.json()
-  const { planId, variantId, productId, quantity = 1 } = body
-
-  if (!planId) throw new Error('Plan ID is required')
+  const { planId, variantId, productId, quantity } = portalCreateSubscriptionSchema.parse(await req.json())
 
   const plan = await db.plan.findUnique({
     where: { id: planId },
@@ -79,7 +77,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session) => {
 
   if (!plan) throw new NotFoundError('Plan not found')
 
-  const qty = Math.max(Number(quantity) || 1, plan.minQuantity)
+  const qty = Math.max(quantity, plan.minQuantity)
 
   // Calculate pricing
   let unitPrice = plan.price

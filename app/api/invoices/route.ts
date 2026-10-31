@@ -9,14 +9,8 @@ export const dynamic = 'force-dynamic'
 // Invoice list. Every list endpoint is paginated (ground rule)
 // with a total count for the pager. Filters: status (incl. OVERDUE pseudo
 // status), customer, date range, search.
-// Staff/admin see everything; customers are hard-scoped to their own invoices.
-export const GET = apiHandler(null, async (req: NextRequest, session) => {
-  if (!session) throw new ApiError(401, 'Authentication required')
-  if (session.role === Role.CUSTOMER) {
-    if (!session.customerId) throw new ApiError(403, 'No customer profile linked to this account')
-  } else if (session.role !== Role.ADMIN && session.role !== Role.STAFF) {
-    throw new ApiError(403, 'Insufficient permissions')
-  }
+
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
 
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')

@@ -3,8 +3,14 @@ import { apiHandler, ApiContext, ApiError, NotFoundError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { InvoiceStatus, PayMethod, Prisma } from '@prisma/client'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const portalPaymentSchema = z.object({
+  method: z.enum(['CARD', 'BANK_TRANSFER', 'UPI', 'CASH', 'CHEQUE']).default('CARD'),
+  note: z.string().optional().default('Settled via Customer Portal'),
+})
 
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const customer = await getPortalCustomer(session)

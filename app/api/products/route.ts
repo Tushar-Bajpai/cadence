@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiHandler, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { formatCurrency } from '@/lib/format'
+import { createProductSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,34 +40,23 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
   }))
 })
 
-export const POST = apiHandler(['ADMIN'], async (req: NextRequest) => {
-  const body = await req.json()
-  const { name, type = 'service', salesPrice, costPrice = 0, notes, variants = [] } = body
 
-  if (!name || salesPrice === undefined) {
-    throw new ApiError(400, 'Name and salesPrice are required')
-  }
-  const salesPriceNum = Number(salesPrice)
-  const costPriceNum = Number(costPrice)
-  if (!Number.isFinite(salesPriceNum) || salesPriceNum < 0) {
-    throw new ApiError(400, 'salesPrice must be a non-negative number')
-  }
-  if (!Number.isFinite(costPriceNum) || costPriceNum < 0) {
-    throw new ApiError(400, 'costPrice must be a non-negative number')
-  }
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
+  const data = createProductSchema.parse(await req.json())
 
   const product = await db.product.create({
     data: {
-      name,
-      type,
-      salesPrice: salesPriceNum,
-      costPrice: costPriceNum,
-      notes,
+      name: data.name,
+      type: data.type,
+      salesPrice: data.salesPrice,
+      costPrice: data.costPrice,
+      notes: data.notes,
+
       variants: {
-        create: variants.map((v: any) => ({
-          attribute: v.attribute || 'Addon',
+        create: data.variants.map((v) => ({
+          attribute: v.attribute,
           value: v.value,
-          extraPrice: Number(v.extraPrice) || 0,
+          extraPrice: v.extraPrice,
         })),
       },
     },
@@ -75,4 +65,3 @@ export const POST = apiHandler(['ADMIN'], async (req: NextRequest) => {
 
   return { success: true, product }
 })
-

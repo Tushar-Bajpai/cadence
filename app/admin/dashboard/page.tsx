@@ -33,6 +33,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { RecordPaymentModal } from '@/components/admin/record-payment-modal'
+import { Skeleton, TableSkeleton } from '@/components/ui/skeleton'
 import { format, subDays, startOfYear } from 'date-fns'
 
 interface SummaryData {
@@ -190,12 +191,7 @@ export default function FinanceDashboardPage() {
       <div className="border-b border-white/10 px-6 sm:px-10 py-8 lg:py-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] tracking-[0.28em] font-mono uppercase px-2.5 py-0.5 rounded-md bg-[#8978ff]/15 text-[#a79aff] border border-[#8978ff]/30 font-semibold">
-                PHASE 9 &bull; FINANCE & MRR ENGINE
-              </span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mt-2">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
               Finance & Performance Dashboard
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm text-white/60 max-w-2xl leading-relaxed">
@@ -520,8 +516,9 @@ export default function FinanceDashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full rounded-2xl bg-white/[0.02] flex items-center justify-center text-xs text-white/30 animate-pulse">
-                  Loading revenue chart...
+                <div className="h-full rounded-2xl bg-white/[0.02] p-6 space-y-4" aria-busy="true">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-40 w-full rounded-xl" />
                 </div>
               )}
             </div>
@@ -560,7 +557,7 @@ export default function FinanceDashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-white/5 animate-pulse" />
+                <Skeleton className="w-32 h-32 rounded-full" />
               )}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-xl font-bold text-white">
@@ -623,11 +620,7 @@ export default function FinanceDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {loading ? (
-                    <tr>
-                      <td colSpan={7} className="py-12 text-center text-white/40">
-                        Loading overdue invoices...
-                      </td>
-                    </tr>
+                    <TableSkeleton columns={7} rows={5} />
                   ) : data?.overdueInvoices && data.overdueInvoices.length > 0 ? (
                     data.overdueInvoices.map((inv) => (
                       <tr key={inv.id} className="hover:bg-white/[0.04] transition group">

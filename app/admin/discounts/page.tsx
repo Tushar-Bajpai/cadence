@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { Tag, Plus, X, Trash2, Power, Pencil, Loader2 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
+import { useAdminStore } from '@/stores/use-admin-store'
+import { createTaxSchema } from '@/lib/validators'
+import { CardSkeletonGrid } from '@/components/ui/skeleton'
 
 interface DiscountRow {
   id: string
@@ -39,6 +42,7 @@ interface ProductRow {
 type Modal = 'discount' | 'tax' | null
 
 export default function DiscountsPage() {
+  const { showToast } = useAdminStore()
   const [discounts, setDiscounts] = useState<DiscountRow[]>([])
   const [taxes, setTaxes] = useState<TaxRow[]>([])
   const [products, setProducts] = useState<ProductRow[]>([])
@@ -118,6 +122,29 @@ export default function DiscountsPage() {
   const handleCreateDiscount = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    // Instant client-side input validation
+    if (!dName.trim()) {
+      setError('Discount code name is required')
+      showToast('Discount code name is required', 'error')
+      return
+    }
+    if (!Number(dValue) || Number(dValue) <= 0) {
+      setError('A positive discount value is required')
+      showToast('A positive discount value is required', 'error')
+      return
+    }
+    if (dType === 'PERCENTAGE' && Number(dValue) > 100) {
+      setError('A percentage discount cannot exceed 100%')
+      showToast('A percentage discount cannot exceed 100%', 'error')
+      return
+    }
+    if (dScope === 'PRODUCT' && dProducts.length === 0) {
+      setError('Please select at least one product for product-scoped discounts')
+      showToast('Please select at least one product for product-scoped discounts', 'error')
+      return
+    }
+
     try {
       const res = await fetch('/api/discounts', {
         method: 'POST',
@@ -138,8 +165,10 @@ export default function DiscountsPage() {
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(json.error || 'Failed to create discount')
       setModal(null)
+      showToast('Discount promotion created successfully', 'success')
       fetchData()
     } catch (err: any) {
+      showToast(err.message || 'Error creating discount', 'error')
       setError(err.message || 'Error creating discount')
     }
   }
@@ -172,6 +201,20 @@ export default function DiscountsPage() {
   const handleSaveTax = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    // Instant client-side Zod input validation
+    const parsed = createTaxSchema.safeParse({
+      name: tName,
+      type: tType,
+      value: tValue,
+    })
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message || 'Please check tax inputs'
+      setError(msg)
+      showToast(msg, 'error')
+      return
+    }
+
     try {
       const res = editingTax
         ? await fetch(`/api/taxes/${editingTax.id}`, {
@@ -188,8 +231,10 @@ export default function DiscountsPage() {
       if (!res.ok) throw new Error(json.error || 'Failed to save tax')
       setModal(null)
       setEditingTax(null)
+      showToast('Tax policy saved successfully', 'success')
       fetchData()
     } catch (err: any) {
+      showToast(err.message || 'Error saving tax', 'error')
       setError(err.message || 'Error saving tax')
     }
   }
@@ -257,9 +302,7 @@ export default function DiscountsPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-white/40" />
-          </div>
+          <CardSkeletonGrid count={3} />
         ) : discounts.length === 0 ? (
           <p className="text-xs text-white/40 font-mono py-8 text-center">No discount rules yet.</p>
         ) : (
@@ -397,9 +440,7 @@ export default function DiscountsPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-white/40" />
-          </div>
+          <CardSkeletonGrid count={3} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {taxes.map((t) => (

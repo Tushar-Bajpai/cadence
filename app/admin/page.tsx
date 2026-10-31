@@ -22,13 +22,23 @@ import {
 } from 'lucide-react'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
 import { RunBillingModal } from '@/components/admin/run-billing-modal'
+import { useAdminStore } from '@/stores/use-admin-store'
+import { Skeleton, TableSkeleton } from '@/components/ui/skeleton'
 
 export default function AdminDashboardPage() {
+  const {
+    isRunBillingOpen,
+    openRunBilling,
+    closeRunBilling,
+    isInvoiceModalOpen,
+    openInvoiceModal,
+    closeInvoiceModal,
+    showToast,
+  } = useAdminStore()
+
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetailData | null>(null)
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
-  const [isRunBillingOpen, setIsRunBillingOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PAID' | 'FAILED'>('ALL')
   const [showFilterMenu, setShowFilterMenu] = useState(false)
 
@@ -55,12 +65,12 @@ export default function AdminDashboardPage() {
       const data = await res.json()
       if (res.ok) {
         setSelectedInvoice(data)
-        setIsInvoiceModalOpen(true)
+        openInvoiceModal(invoiceId)
       } else {
-        alert(data.error || 'Failed to fetch invoice')
+        showToast(data.error || 'Failed to fetch invoice', 'error')
       }
     } catch (err: any) {
-      alert(err.message || 'Error opening invoice')
+      showToast(err.message || 'Error opening invoice', 'error')
     }
   }
 
@@ -99,11 +109,11 @@ export default function AdminDashboardPage() {
             </Link>
 
             <button
-              onClick={() => setIsRunBillingOpen(true)}
+              onClick={openRunBilling}
               className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_10px_35px_rgba(137,120,255,.4)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
               <Zap className="w-4 h-4 fill-white" />
-              <span>Run Billing Engine ⚡</span>
+              <span>Run Billing Engine</span>
             </button>
 
             <button
@@ -168,18 +178,22 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                      {stats?.activeSubscriptionsCount ?? 0} Active Subscriptions
+                      {loading && !stats ? (
+                        <Skeleton className="h-4 w-32" />
+                      ) : (
+                        `${stats?.activeSubscriptionsCount ?? 0} Active Subscriptions`
+                      )}
                     </span>
                     <div className="mt-3 flex items-baseline gap-1.5">
                       <span className="text-3xl font-extrabold text-white tracking-tight">
-                        {stats?.formattedMrr || '₹0.00'}
+                        {loading && !stats ? <Skeleton className="h-9 w-28" /> : stats?.formattedMrr || '₹0.00'}
                       </span>
                       <span className="text-xs text-white/50 font-mono">/ Month</span>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => setIsRunBillingOpen(true)}
+                    onClick={openRunBilling}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
                   >
                     <span>Run Billing</span>
@@ -200,10 +214,14 @@ export default function AdminDashboardPage() {
                 <div>
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="text-base font-bold text-white tracking-tight">
-                      {stats?.paidInvoicesCount ?? 0} / {stats?.totalInvoicesCount ?? 0} Invoices
+                      {loading && !stats ? (
+                        <Skeleton className="h-5 w-32" />
+                      ) : (
+                        `${stats?.paidInvoicesCount ?? 0} / ${stats?.totalInvoicesCount ?? 0} Invoices`
+                      )}
                     </span>
                     <span className="text-xs font-mono font-bold text-[#8978ff]">
-                      {stats?.collectionRate ?? 100}%
+                      {loading && !stats ? <Skeleton className="h-4 w-10" /> : `${stats?.collectionRate ?? 100}%`}
                     </span>
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
@@ -219,7 +237,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="text-base font-bold text-white tracking-tight">
-                      {stats?.formattedTotalRevenue || '₹0.00'}
+                      {loading && !stats ? <Skeleton className="h-5 w-28" /> : stats?.formattedTotalRevenue || '₹0.00'}
                     </span>
                     <span className="text-xs font-mono font-bold text-amber-400">
                       {stats?.overdueInvoicesCount ? `${stats.overdueInvoicesCount} Due` : '0 Overdue'}
@@ -315,7 +333,9 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.06] text-xs">
-                  {displayedInvoices.length === 0 ? (
+                  {loading && !stats ? (
+                    <TableSkeleton columns={5} rows={5} />
+                  ) : displayedInvoices.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-10 text-center text-white/40 font-mono">
                         No billing history records matching current filter.
@@ -454,17 +474,21 @@ export default function AdminDashboardPage() {
       <InvoiceModal
         invoice={selectedInvoice}
         isOpen={isInvoiceModalOpen}
-        onClose={() => setIsInvoiceModalOpen(false)}
+        onClose={closeInvoiceModal}
         onInvoiceUpdate={setSelectedInvoice}
-        onRefresh={fetchDashboardData}
+        onRefresh={() => {
+          fetchDashboardData()
+          if (selectedInvoice) handleOpenInvoiceModal(selectedInvoice.id)
+        }}
       />
 
       {/* Invoicing Run Modal */}
       <RunBillingModal
         isOpen={isRunBillingOpen}
-        onClose={() => setIsRunBillingOpen(false)}
+        onClose={closeRunBilling}
         onSuccess={() => {
           fetchDashboardData()
+          showToast('Billing run batch completed successfully', 'success')
         }}
       />
     </div>

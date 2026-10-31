@@ -3,6 +3,7 @@ import { apiHandler, ApiContext } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { getUnitPrice } from '@/lib/pricing'
+import { portalAddLineSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,9 +22,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   if (!subscription) throw new Error('Subscription not found or access denied')
 
-  const body = await req.json()
-  const { productId, variantId, quantity = 1 } = body
-  if (!productId) throw new Error('Product ID is required')
+  const { productId, variantId, quantity } = portalAddLineSchema.parse(await req.json())
 
   const product = await db.product.findUnique({
     where: { id: productId },

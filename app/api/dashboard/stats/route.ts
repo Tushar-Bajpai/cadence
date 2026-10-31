@@ -158,4 +158,3 @@ export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
     recentSubscriptions,
   }
 })
-

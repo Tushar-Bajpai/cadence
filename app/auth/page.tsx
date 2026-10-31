@@ -10,9 +10,14 @@ import {
   EyeOff,
   Loader2,
   Zap,
+  User,
 } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { CadenceLogo } from '@/components/cadence-logo'
+import { useAuthStore } from '@/stores/use-auth-store'
+import { loginSchema, signupSchema } from '@/lib/validators'
+import { toUserFriendlyError } from '@/lib/friendly-error'
+import { startTopLoading, stopTopLoading } from '@/lib/loading'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -36,7 +41,17 @@ export default function AuthPage() {
     const endpoint = mode === 'signin' ? '/api/auth/login' : '/api/auth/signup'
     const body = mode === 'signin' ? { email, password } : { name, email, password }
 
+    // Instant client-side Zod input validation
+    const schema = mode === 'signin' ? loginSchema : signupSchema
+    const parseResult = schema.safeParse(body)
+    if (!parseResult.success) {
+      setError(parseResult.error.issues[0]?.message || 'Invalid input')
+      setLoadingProvider(null)
+      return
+    }
+
     try {
+      startTopLoading()
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,9 +60,14 @@ export default function AuthPage() {
       const json = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setError(json.error || 'Something went wrong. Please try again.')
+        stopTopLoading()
+        setError(toUserFriendlyError(json.error || 'Something went wrong. Please try again.'))
         setLoadingProvider(null)
         return
+      }
+
+      if (json?.user) {
+        useAuthStore.getState().setUser(json.user)
       }
 
       setIsSuccess(true)
@@ -59,8 +79,9 @@ export default function AuthPage() {
         router.push(isAdmin ? '/admin' : '/portal')
         router.refresh()
       }, 900)
-    } catch {
-      setError('Network error. Please check your connection and try again.')
+    } catch (err: any) {
+      stopTopLoading()
+      setError(toUserFriendlyError(err?.message || 'Network error. Please check your connection and try again.'))
       setLoadingProvider(null)
     }
   }
@@ -162,18 +183,19 @@ export default function AuthPage() {
             </div>
           ) : (
             <>
-              {/* Social Login & Demo Admin Shortcut */}
-              <div className="flex gap-2.5">
+              {/* Quick Login & Role Demo Shortcuts */}
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => handleOAuth('Google')}
                   disabled={loadingProvider !== null}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/5 py-2.5 px-3 text-xs font-medium text-white transition hover:bg-white/10 hover:border-white/25 cursor-pointer disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-white/5 py-2 px-2 text-xs font-medium text-white transition hover:bg-white/10 hover:border-white/25 cursor-pointer disabled:opacity-50"
+                  title="Sign in with Google OAuth"
                 >
                   {loadingProvider === 'Google' ? (
-                    <Loader2 className="size-4 animate-spin text-white/60" />
+                    <Loader2 className="size-3.5 animate-spin text-white/60" />
                   ) : (
-                    <FcGoogle className="size-4 shrink-0" />
+                    <FcGoogle className="size-3.5 shrink-0" />
                   )}
                   <span>Google</span>
                 </button>
@@ -181,32 +203,95 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={async () => {
+                    setError(null)
                     setEmail('admin@cadence.dev')
                     setPassword('Admin@1234')
-                    setLoadingProvider('demo')
+                    setLoadingProvider('demo-admin')
+                    startTopLoading()
                     try {
                       const res = await fetch('/api/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: 'admin@cadence.dev', password: 'Admin@1234' }),
                       })
+                      const json = await res.json().catch(() => ({}))
                       if (res.ok) {
+                        if (json?.user) {
+                          useAuthStore.getState().setUser(json.user)
+                        }
                         setIsSuccess(true)
                         setSuccessMsg('Welcome back, Admin')
                         setTimeout(() => {
-                          router.push('/admin')
-                          router.refresh()
-                        }, 500)
+                          window.location.href = '/admin'
+                        }, 400)
+                      } else {
+                        stopTopLoading()
+                        setError(toUserFriendlyError(json.error || 'Failed to sign in as Demo Admin'))
                       }
+                    } catch (err: any) {
+                      stopTopLoading()
+                      setError(toUserFriendlyError(err?.message || 'Connection error during demo login'))
                     } finally {
                       setLoadingProvider(null)
                     }
                   }}
                   disabled={loadingProvider !== null}
-                  className="flex items-center justify-center gap-1.5 rounded-xl border border-[#8978ff]/30 bg-[#8978ff]/15 py-2.5 px-3 text-xs font-semibold text-[#a79aff] transition hover:bg-[#8978ff]/25 cursor-pointer disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-[#8978ff]/30 bg-[#8978ff]/15 py-2 px-2 text-xs font-semibold text-[#a79aff] transition hover:bg-[#8978ff]/25 cursor-pointer disabled:opacity-50"
+                  title="1-click demo login as Admin"
                 >
-                  <Zap className="size-3.5 fill-[#8978ff] text-[#8978ff]" />
-                  <span>Demo Admin ⚡</span>
+                  {loadingProvider === 'demo-admin' ? (
+                    <Loader2 className="size-3 animate-spin text-[#8978ff]" />
+                  ) : (
+                    <Zap className="size-3 fill-[#8978ff] text-[#8978ff]" />
+                  )}
+                  <span>Admin ⚡</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setError(null)
+                    setEmail('robert.fox@example.com')
+                    setPassword('Admin@1234')
+                    setLoadingProvider('demo-customer')
+                    startTopLoading()
+                    try {
+                      const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'robert.fox@example.com', password: 'Admin@1234' }),
+                      })
+                      const json = await res.json().catch(() => ({}))
+                      if (res.ok) {
+                        if (json?.user) {
+                          useAuthStore.getState().setUser(json.user)
+                        }
+                        setIsSuccess(true)
+                        setSuccessMsg('Welcome back, Robert Fox')
+                        setTimeout(() => {
+                          window.location.href = '/portal'
+                        }, 400)
+                      } else {
+                        stopTopLoading()
+                        setError(toUserFriendlyError(json.error || 'Failed to sign in as Demo Customer'))
+                      }
+                    } catch (err: any) {
+                      stopTopLoading()
+                      setError(toUserFriendlyError(err?.message || 'Connection error during demo login'))
+                    } finally {
+                      setLoadingProvider(null)
+                    }
+                  }}
+                  disabled={loadingProvider !== null}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-white/5 py-2 px-2 text-xs font-semibold text-white/80 transition hover:bg-white/10 hover:text-white cursor-pointer disabled:opacity-50"
+                  title="1-click demo login as Customer (Robert Fox)"
+                >
+                  {loadingProvider === 'demo-customer' ? (
+                    <Loader2 className="size-3 animate-spin text-white/60" />
+                  ) : (
+                    <User className="size-3 text-[#8978ff]" />
+                  )}
+                  <span>Customer</span>
                 </button>
               </div>
 

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiHandler, ApiContext } from '@/lib/api'
 import { db } from '@/lib/db'
 import { DiscountType, DiscountScope, Prisma } from '@prisma/client'
+import { updateDiscountTargetedSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,51 +12,33 @@ export const PATCH = apiHandler(['ADMIN'], async (req: NextRequest, _session, co
   const id = params?.id as string
   if (!id) throw new Error('Discount ID is required')
 
-  const body = await req.json()
+  const parsed = updateDiscountTargetedSchema.parse(await req.json())
   const data: Record<string, unknown> = {}
 
-  if (body.name !== undefined) {
-    const name = String(body.name).trim()
-    if (!name) throw new Error('Discount name cannot be empty')
-    data.name = name
-  }
-  if (body.value !== undefined) {
-    const value = Number(body.value)
-    if (!Number.isFinite(value) || value <= 0) {
-      throw new Error('A positive discount value is required')
-    }
-    const type = body.type ?? (await db.discount.findUnique({ where: { id }, select: { type: true } }))?.type
-    if (type === DiscountType.PERCENTAGE && value > 100) {
+  if (parsed.name !== undefined) data.name = parsed.name
+  if (parsed.value !== undefined) {
+    const type = parsed.type ?? (await db.discount.findUnique({ where: { id }, select: { type: true } }))?.type
+    if (type === DiscountType.PERCENTAGE && parsed.value > 100) {
       throw new Error('A percentage discount cannot exceed 100%')
     }
-    data.value = value
+    data.value = parsed.value
   }
-  if (body.minPurchase !== undefined) {
+  if (parsed.minPurchase !== undefined) {
     data.minPurchase =
-      body.minPurchase === null || body.minPurchase === ''
+      parsed.minPurchase === null
         ? null
-        : new Prisma.Decimal(Number(body.minPurchase))
+        : new Prisma.Decimal(parsed.minPurchase)
   }
-  if (body.minQuantity !== undefined) {
-    const minQuantity = body.minQuantity === null ? null : Math.floor(Number(body.minQuantity))
-    if (minQuantity !== null && minQuantity < 1) throw new Error('Minimum quantity must be at least 1')
-    data.minQuantity = minQuantity
-  }
-  if (body.usageLimit !== undefined) {
-    const usageLimit = Math.floor(Number(body.usageLimit))
-    if (!Number.isFinite(usageLimit) || usageLimit < 1) {
-      throw new Error('Usage limit must be at least 1')
-    }
-    data.usageLimit = usageLimit
-  }
-  if (body.isActive !== undefined) data.isActive = Boolean(body.isActive)
-  if (body.startDate !== undefined) {
-    const startDate = new Date(body.startDate)
+  if (parsed.minQuantity !== undefined) data.minQuantity = parsed.minQuantity
+  if (parsed.usageLimit !== undefined) data.usageLimit = parsed.usageLimit
+  if (parsed.isActive !== undefined) data.isActive = parsed.isActive
+  if (parsed.startDate !== undefined) {
+    const startDate = new Date(parsed.startDate)
     if (Number.isNaN(startDate.getTime())) throw new Error('Invalid start date')
     data.startDate = startDate
   }
-  if (body.endDate !== undefined) {
-    const endDate = new Date(body.endDate)
+  if (parsed.endDate !== undefined) {
+    const endDate = new Date(parsed.endDate)
     if (Number.isNaN(endDate.getTime())) throw new Error('Invalid end date')
     data.endDate = endDate
   }
@@ -72,10 +55,10 @@ export const PATCH = apiHandler(['ADMIN'], async (req: NextRequest, _session, co
 
   // Product targeting (replace the whole set when provided)
   const productUpdate: Prisma.DiscountUpdateInput = {}
-  if (Array.isArray(body.productIds)) {
+  if (Array.isArray(parsed.productIds)) {
     productUpdate.products = {
       deleteMany: {},
-      create: (body.productIds as string[]).map((productId) => ({ productId })),
+      create: parsed.productIds.map((productId) => ({ productId })),
     }
     data.products = productUpdate.products
   }

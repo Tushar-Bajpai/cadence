@@ -3,6 +3,7 @@ import { apiHandler } from '@/lib/api'
 import { db } from '@/lib/db'
 import { formatCurrency } from '@/lib/format'
 import { BillingPeriod } from '@prisma/client'
+import { createPlanSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,38 +31,23 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
   }))
 })
 
-export const POST = apiHandler(null, async (req: NextRequest) => {
-  const body = await req.json()
-  const {
-    name,
-    price,
-    billingPeriod = BillingPeriod.MONTHLY,
-    minQuantity = 1,
-    pausable = true,
-    closable = true,
-    renewable = true,
-    autoCloseOnEnd = false,
-  } = body
-
-  if (!name || price === undefined) {
-    throw new Error('Name and price are required')
-  }
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
+  const data = createPlanSchema.parse(await req.json())
 
   const plan = await db.plan.create({
     data: {
-      name,
-      price: Number(price),
-      billingPeriod,
-      minQuantity: Number(minQuantity) || 1,
+      name: data.name,
+      price: data.price,
+      billingPeriod: data.billingPeriod as BillingPeriod,
+      minQuantity: data.minQuantity,
       availableFrom: new Date(),
-      pausable,
-      closable,
-      renewable,
-      autoCloseOnEnd,
+      pausable: data.pausable,
+      closable: data.closable,
+      renewable: data.renewable,
+      autoCloseOnEnd: data.autoCloseOnEnd,
       isActive: true,
     },
   })
 
   return { success: true, plan }
 })
-

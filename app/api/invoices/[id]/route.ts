@@ -7,7 +7,7 @@ import { getPortalCustomer } from '@/lib/portal-customer'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (
   req: NextRequest,
   session,
   context?: ApiContext

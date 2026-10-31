@@ -2,10 +2,11 @@ import { NextRequest } from 'next/server'
 import { apiHandler } from '@/lib/api'
 import { db } from '@/lib/db'
 import { TaxType } from '@prisma/client'
+import { createTaxSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async () => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async () => {
   const taxes = await db.tax.findMany({
     orderBy: [{ isActive: 'desc' }, { name: 'asc' }],
     include: {
@@ -25,21 +26,15 @@ export const GET = apiHandler(null, async () => {
 
 // Admin only: create a tax (percentage or fixed)
 export const POST = apiHandler(['ADMIN'], async (req: NextRequest) => {
-  const body = await req.json()
-  const name = String(body.name || '').trim()
-  const type = body.type === 'FIXED' ? TaxType.FIXED : TaxType.PERCENTAGE
-  const value = Number(body.value)
-
-  if (!name) throw new Error('Tax name is required')
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error('A non-negative tax value is required')
-  }
-  if (type === TaxType.PERCENTAGE && value > 100) {
-    throw new Error('A percentage tax cannot exceed 100%')
-  }
+  const data = createTaxSchema.parse(await req.json())
 
   const tax = await db.tax.create({
-    data: { name, type, value, isActive: true },
+    data: {
+      name: data.name,
+      type: data.type as TaxType,
+      value: data.value,
+      isActive: data.isActive,
+    },
   })
 
   return {

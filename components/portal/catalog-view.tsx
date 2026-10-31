@@ -18,6 +18,8 @@ import {
   Info,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
+import { usePortalStore } from '@/stores/use-portal-store'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface PlanItem {
   id: string
@@ -69,11 +71,18 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
   const [existingSubs, setExistingSubs] = useState<ExistingSubscription[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Selection states
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
-  const [quantity, setQuantity] = useState(1)
+  // Zustand global configurator state
+  const {
+    selectedPlanId,
+    setSelectedPlanId,
+    selectedProductId,
+    setSelectedProductId,
+    selectedVariantId,
+    setSelectedVariantId,
+    quantity,
+    setQuantity,
+    resetConfigurator,
+  } = usePortalStore()
 
   // Subscribing target mode: 'new' or 'existing'
   const [targetMode, setTargetMode] = useState<'new' | 'existing'>('new')
@@ -223,9 +232,23 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
 
   if (loading) {
     return (
-      <div className="py-24 flex flex-col items-center justify-center text-white/50 space-y-3">
-        <div className="w-8 h-8 rounded-full border-2 border-[#8978ff] border-t-transparent animate-spin" />
-        <span className="text-xs font-mono uppercase tracking-wider">Loading Products, Variants & Plans...</span>
+      <div className="space-y-8" aria-busy="true" aria-label="Loading catalog">
+        <div className="space-y-3 border-b border-white/10 pb-6">
+          <Skeleton className="h-3 w-56" />
+          <Skeleton className="h-10 w-3/4 max-w-xl" />
+          <Skeleton className="h-4 w-full max-w-2xl" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="mt-3 h-3 w-1/2" />
+              <Skeleton className="mt-8 h-10 w-1/3" />
+              <Skeleton className="mt-6 h-12 w-full rounded-xl" />
+              <Skeleton className="mt-3 h-12 w-full rounded-xl" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }

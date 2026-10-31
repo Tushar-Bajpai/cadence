@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { PortalTopNavbar } from '@/components/portal/portal-top-navbar'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   ArrowLeft,
   Calendar,
@@ -128,7 +129,22 @@ export default function SubscriptionDetailPage() {
         )}
 
         {loading ? (
-          <div className="h-96 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
+          <div className="space-y-6" aria-busy="true">
+            <div className="rounded-3xl bg-white/[0.03] border border-white/10 p-6 sm:p-8 space-y-5">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-8 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-8 w-72" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Skeleton className="h-16 rounded-xl" />
+                <Skeleton className="h-16 rounded-xl" />
+                <Skeleton className="h-16 rounded-xl" />
+                <Skeleton className="h-16 rounded-xl" />
+              </div>
+            </div>
+            <Skeleton className="h-56 w-full rounded-3xl" />
+          </div>
         ) : subscription ? (
           <div className="space-y-6">
             {/* Top Detail Card */}
@@ -338,4 +354,3 @@ export default function SubscriptionDetailPage() {
     </div>
   )
 }
-

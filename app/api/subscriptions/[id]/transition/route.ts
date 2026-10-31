@@ -9,8 +9,21 @@ import {
   canRenew,
 } from '@/lib/subscription-state'
 import { addPeriod } from '@/lib/billing-period'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+
+const transitionInputSchema = z
+  .object({
+    action: z.enum(['pause', 'resume', 'renew']).optional(),
+    to: z.enum(['DRAFT', 'QUOTATION', 'CONFIRMED', 'ACTIVE', 'CLOSED']).optional(),
+    targetStatus: z.enum(['DRAFT', 'QUOTATION', 'CONFIRMED', 'ACTIVE', 'CLOSED']).optional(),
+  })
+  .refine((data) => data.action || data.to || data.targetStatus, {
+    message: 'Either action, to, or targetStatus is required',
+  })
+
 
 export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
@@ -18,16 +31,9 @@ export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, sess
 
   if (!id) throw new Error('Subscription ID is required')
 
-  let body: any = {}
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 })
-  }
-
-  // Accept both 'to' (per BUILD_PLAN.md) and 'targetStatus'
-  const targetStatus = (body.to || body.targetStatus) as SubStatus | undefined
-  const action = body.action as 'pause' | 'resume' | 'renew' | undefined
+  const parsed = transitionInputSchema.parse(await req.json())
+  const targetStatus = (parsed.to || parsed.targetStatus) as SubStatus | undefined
+  const action = parsed.action
 
   const sub = await db.subscription.findUnique({
     where: { id },

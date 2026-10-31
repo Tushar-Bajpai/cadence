@@ -1,6 +1,9 @@
 import { Analytics } from '@vercel/analytics/next'
 import { Outfit } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
+import { TopLoadingBar } from '@/components/top-loading-bar'
+import { DbKeepAlive } from '@/components/db-keep-alive'
 import './globals.css'
 
 // Brand display font for the landing page (geometric rounded sans,
@@ -45,6 +48,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
+        <Suspense fallback={null}>
+          <TopLoadingBar />
+          <DbKeepAlive />
+        </Suspense>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

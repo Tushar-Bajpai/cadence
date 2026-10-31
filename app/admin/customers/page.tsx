@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Users, Search, Mail, Phone, Calendar, MapPin, ChevronRight } from 'lucide-react'
 import { CustomerModal, CustomerModalData } from '@/components/admin/customer-modal'
+import { CardSkeletonGrid } from '@/components/ui/skeleton'
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([])
@@ -78,7 +79,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Grid of Customer Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {loading ? <CardSkeletonGrid count={6} /> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCustomers.map((cust) => (
           <div
             key={cust.id}
@@ -141,7 +142,7 @@ export default function CustomersPage() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
 
       <CustomerModal
         customer={selectedCustomer}

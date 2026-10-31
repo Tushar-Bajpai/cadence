@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { PortalTopNavbar } from '@/components/portal/portal-top-navbar'
 import { RazorpayPaymentModal } from '@/components/razorpay-payment-modal'
+import { TableSkeleton } from '@/components/ui/skeleton'
 import {
   Download,
   Filter,
@@ -178,11 +179,7 @@ export default function PortalInvoicesPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-white/40">
-                      Loading invoices...
-                    </td>
-                  </tr>
+                  <TableSkeleton columns={8} rows={6} />
                 ) : filteredInvoices.length > 0 ? (
                   filteredInvoices.map((inv) => {
                     const isOverdue =
@@ -299,4 +296,3 @@ export default function PortalInvoicesPage() {
     </div>
   )
 }
-
