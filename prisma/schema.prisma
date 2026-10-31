@@ -209,6 +209,8 @@ model Subscription {
 
   @@index([status])
   @@index([customerId])
+  @@index([planId])
+  @@index([status, planId])
   @@index([status, isPaused, nextBillingDate]) // the billing-run query
 }
 
@@ -301,5 +303,7 @@ model Payment {
   recordedById String?
 
   @@index([invoiceId])
+  @@index([customerId])
   @@index([date])
+  @@index([customerId, date])
 }
