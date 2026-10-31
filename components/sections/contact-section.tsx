@@ -113,7 +113,7 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
             </button>
 
             <a
-              href="https://github.com/codelifters"
+              href="https://github.com/Tushar-Bajpai/cadence"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 transition hover:bg-white/15 hover:text-white hover:border-white/30"
