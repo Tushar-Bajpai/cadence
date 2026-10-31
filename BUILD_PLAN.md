@@ -464,7 +464,8 @@ Routes under `/portal`, customer role only. **Every query is scoped by the sessi
 
 ---
 
-## Phase 9: Finance Dashboard (60 min)
+## Phase 9: 
+ (60 min)
 
 `/admin/dashboard` (admin + staff). One API `GET /api/reports/summary?from=&to=&customerId=&status=`, with all queries run in parallel via `Promise.all`:
 
