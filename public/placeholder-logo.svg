@@ -1,0 +1,65 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="48" y1="24" x2="464" y2="488" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#140f3c" />
+      <stop offset="45%" stop-color="#090624" />
+      <stop offset="100%" stop-color="#030210" />
+    </linearGradient>
+    <radialGradient id="ambientCore" cx="48%" cy="46%" r="56%">
+      <stop offset="0%" stop-color="#8978ff" stop-opacity="0.4" />
+      <stop offset="55%" stop-color="#6042ec" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#8978ff" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="rimStroke" x1="32" y1="32" x2="480" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#b8aaff" stop-opacity="0.8" />
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#6d50f7" stop-opacity="0.45" />
+    </linearGradient>
+    <linearGradient id="cadenceRibbon" x1="130" y1="110" x2="380" y2="410" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="16%" stop-color="#e0d7ff" />
+      <stop offset="45%" stop-color="#9d8cff" />
+      <stop offset="78%" stop-color="#6d50f7" />
+      <stop offset="100%" stop-color="#462cc7" />
+    </linearGradient>
+    <linearGradient id="topGlint" x1="200" y1="95" x2="330" y2="155" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="65%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="sparkGrad" x1="0" y1="-45" x2="0" y2="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#f0ecff" />
+      <stop offset="80%" stop-color="#b1a0ff" />
+      <stop offset="100%" stop-color="#8978ff" />
+    </linearGradient>
+    <radialGradient id="sparkHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a79aff" stop-opacity="0.85" />
+      <stop offset="45%" stop-color="#7659ff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#7659ff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="114" fill="url(#bgGrad)" />
+  <rect x="16" y="16" width="480" height="480" rx="114" fill="url(#ambientCore)" />
+  <rect x="16" y="16" width="480" height="480" rx="114" stroke="url(#rimStroke)" stroke-width="8" />
+  <path
+    d="M 345 125 A 158.37 158.37 0 1 0 345 387 A 30 30 0 0 0 345 327 A 113.85 113.85 0 1 1 345 185 A 30 30 0 0 0 345 125 Z"
+    fill="url(#cadenceRibbon)"
+  />
+  <path
+    d="M 335 132 A 154 154 0 0 0 205 130"
+    stroke="url(#topGlint)"
+    stroke-width="6"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <g transform="translate(306, 256)">
+    <circle cx="0" cy="0" r="54" fill="url(#sparkHalo)" />
+    <path
+      d="M 0 -44 Q 0 0, 44 0 Q 0 0, 0 44 Q 0 0, -44 0 Q 0 0, 0 -44 Z"
+      fill="url(#sparkGrad)"
+    />
+    <circle cx="0" cy="0" r="8" fill="#ffffff" />
+    <circle cx="0" cy="0" r="14" fill="#ffffff" opacity="0.35" />
+  </g>
+</svg>
