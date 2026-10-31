@@ -132,6 +132,7 @@ export default function InvoicesPage() {
                 <th className="py-3 px-6">Issue Date</th>
                 <th className="py-3 px-6">Due Date</th>
                 <th className="py-3 px-6">Amount</th>
+                <th className="py-3 px-6">Outstanding</th>
                 <th className="py-3 px-6">Status</th>
                 <th className="py-3 px-6 text-right">Action</th>
               </tr>
@@ -139,7 +140,7 @@ export default function InvoicesPage() {
             <tbody className="divide-y divide-white/[0.06]">
               {invoices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-white/40 font-mono">
+                  <td colSpan={9} className="py-10 text-center text-white/40 font-mono">
                     No invoices found.
                   </td>
                 </tr>
@@ -162,6 +163,13 @@ export default function InvoicesPage() {
                     <td className="py-4 px-6 text-white/60 font-mono">{inv.dueDate}</td>
                     <td className="py-4 px-6 font-bold text-white">
                       {inv.formattedAmount}
+                    </td>
+                    <td className="py-4 px-6 font-mono">
+                      {inv.outstanding > 0 ? (
+                        <span className="text-amber-400 font-semibold">{inv.formattedOutstanding}</span>
+                      ) : (
+                        <span className="text-white/40">₹0.00</span>
+                      )}
                     </td>
                     <td className="py-4 px-6">
                       {inv.status === 'PAID' ? (

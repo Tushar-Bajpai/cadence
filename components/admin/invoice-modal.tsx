@@ -90,11 +90,19 @@ interface InvoiceModalProps {
   onClose: () => void
   onRefresh?: () => void
   onInvoiceUpdate?: (invoice: InvoiceDetailData) => void
+  mode?: 'admin' | 'portal'
 }
 
 const PAY_METHODS = ['CARD', 'BANK_TRANSFER', 'UPI', 'CASH', 'CHEQUE'] as const
 
-export function InvoiceModal({ invoice, isOpen, onClose, onRefresh, onInvoiceUpdate }: InvoiceModalProps) {
+export function InvoiceModal({
+  invoice,
+  isOpen,
+  onClose,
+  onRefresh,
+  onInvoiceUpdate,
+  mode = 'admin',
+}: InvoiceModalProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -243,7 +251,7 @@ export function InvoiceModal({ invoice, isOpen, onClose, onRefresh, onInvoiceUpd
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>Payment due: {invoice.dueOn} • Balance: {invoice.formattedBalanceDue}</span>
               </div>
-              {actions?.canPay && (
+              {mode === 'admin' && actions?.canPay && (
                 <button
                   onClick={openPaymentDialog}
                   disabled={loadingAction !== null}
@@ -407,7 +415,7 @@ export function InvoiceModal({ invoice, isOpen, onClose, onRefresh, onInvoiceUpd
 
         {/* Bottom Actions: the lifecycle buttons (DRAFT → CONFIRMED → PAID / CANCELLED) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-4 bg-white/[0.02] border-t border-white/10">
-          {actions?.canConfirm && (
+          {mode === 'admin' && actions?.canConfirm && (
             <button
               onClick={handleConfirm}
               disabled={loadingAction !== null}
@@ -418,7 +426,7 @@ export function InvoiceModal({ invoice, isOpen, onClose, onRefresh, onInvoiceUpd
             </button>
           )}
 
-          {actions?.canPay && !showPaymentDialog && (
+          {mode === 'admin' && actions?.canPay && !showPaymentDialog && (
             <button
               onClick={openPaymentDialog}
               disabled={loadingAction !== null}
@@ -429,7 +437,7 @@ export function InvoiceModal({ invoice, isOpen, onClose, onRefresh, onInvoiceUpd
             </button>
           )}
 
-          {actions?.canSend && (
+          {mode === 'admin' && actions?.canSend && (
             <button
               onClick={handleSend}
               disabled={loadingAction !== null}
@@ -448,7 +456,7 @@ export function InvoiceModal({ invoice, isOpen, onClose, onRefresh, onInvoiceUpd
             <span>Print</span>
           </button>
 
-          {actions?.canCancel && (
+          {mode === 'admin' && actions?.canCancel && (
             <button
               onClick={handleCancel}
               disabled={loadingAction !== null}
