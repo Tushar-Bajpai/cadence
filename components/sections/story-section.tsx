@@ -72,6 +72,7 @@ export function StorySection({ pageStateClass, onNavigate }: StorySectionProps) 
       </div>
 
       <div className="curve-line curve-line-one pointer-events-none" />
+      <div className="aurora-band" aria-hidden="true" />
 
       {/* Bottom Page Footer */}
       <div className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between border-t border-white/10 pt-4 text-xs sm:text-sm font-mono text-white/40 tracking-[0.15em] uppercase">

@@ -17,6 +17,7 @@ export function CoverSection({ pageStateClass, onNavigate }: CoverSectionProps) 
     >
       <div className="hero-shade absolute inset-0 pointer-events-none" />
       <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_30%_20%,rgba(113,86,255,.55),transparent_32%),linear-gradient(180deg,transparent_48%,#080625_100%)] pointer-events-none" />
+      <div className="aurora-band" aria-hidden="true" />
 
       {/* Global Masthead Header */}
       <MagazineHeader onNavigate={onNavigate} />

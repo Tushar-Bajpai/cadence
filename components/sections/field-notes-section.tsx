@@ -115,6 +115,7 @@ export function FieldNotesSection({ pageStateClass, onNavigate }: FieldNotesSect
           NEXT ↓
         </button>
       </div>
+      <div className="aurora-band" aria-hidden="true" />
     </section>
   )
 }

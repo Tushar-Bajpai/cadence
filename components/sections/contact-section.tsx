@@ -7,8 +7,10 @@ import {
   Check,
   Copy,
   Flame,
+  Heart,
 } from 'lucide-react'
-import { SiGithub, SiVercel } from 'react-icons/si'
+import { SiGithub, SiVercel, SiX, SiInstagram, SiYoutube } from 'react-icons/si'
+import { FaLinkedinIn } from 'react-icons/fa6'
 import { CadenceLogo } from '@/components/cadence-logo'
 
 interface ContactSectionProps {
@@ -156,20 +158,166 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
         </div>
       </div>
 
-      {/* Bottom Colophon Footer */}
-      <footer className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between border-t border-white/12 pt-3 sm:pt-4 text-[11px] sm:text-sm uppercase tracking-[0.15em] text-white/60">
-        <div className="flex items-center gap-2">
-          <CadenceLogo className="size-5 sm:size-6" />
-          <span className="font-semibold tracking-wider text-white">Cadence</span>
-          <span className="hidden sm:inline text-white/40">• by CodeLifters</span>
+      {/* Bottom Colophon Footer — Ironclad-style brand + link sections + aurora waves */}
+      <footer className="aurora-footer relative z-20 mx-auto w-full max-w-7xl border-t border-white/12 px-1 pt-6 sm:pt-8">
+        {/* Aurora grain-wave landscape (background) */}
+        <div className="aurora-waves" aria-hidden="true" />
+        <div className="aurora-grain" aria-hidden="true" />
+
+        <div className="grid gap-8 pb-8 sm:pb-10 lg:grid-cols-12 lg:gap-6">
+          {/* Brand column */}
+          <div className="flex flex-col items-start gap-3 lg:col-span-4 lg:gap-4">
+            <div className="flex items-center gap-2.5">
+              <CadenceLogo className="size-6 sm:size-7" />
+              <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">
+                Cadence
+              </span>
+            </div>
+            <p className="max-w-[280px] text-[11px] leading-relaxed text-white/55 sm:text-sm">
+              Join teams already running recurring billing on Cadence — every
+              cycle invoiced. Zero missed. Never twice.
+            </p>
+            {/* Social tiles */}
+            <div className="mt-1 flex items-center gap-2.5">
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Cadence on X"
+                className="social-tile"
+              >
+                <SiX className="size-3.5" />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Cadence on Instagram"
+                className="social-tile"
+              >
+                <SiInstagram className="size-4" />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Cadence on LinkedIn"                className="social-tile"
+              >
+                <FaLinkedinIn className="size-4" />
+              </a>
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Cadence on YouTube"
+                className="social-tile"
+              >
+                <SiYoutube className="size-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Link sections */}
+          <nav className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:col-span-8 lg:gap-x-4">
+            <div>
+              <h4 className="footer-col-head">Product</h4>
+              <ul>
+                {['Features', 'Integrations', 'Pricing', 'Changelog', 'Security'].map((l) => (
+                  <li key={l}>
+                    <button
+                      onClick={() => onNavigate(2)}
+                      className="footer-col-link cursor-pointer text-left"
+                    >
+                      {l}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="footer-col-head">Company</h4>
+              <ul>
+                <li>
+                  <a href="https://codelifters.xyz" target="_blank" rel="noopener noreferrer" className="footer-col-link">
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a href="https://codelifters.xyz/careers" target="_blank" rel="noopener noreferrer" className="footer-col-link">
+                    Careers
+                  </a>
+                </li>
+                <li>
+                  <button onClick={handleCopyEmail} className="footer-col-link cursor-pointer">
+                    Contact
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="footer-col-head">Resources</h4>
+              <ul>
+                <li>
+                  <a href="https://github.com/Tushar-Bajpai/cadence" target="_blank" rel="noopener noreferrer" className="footer-col-link">
+                    Documentation
+                  </a>
+                </li>
+                <li>
+                  <a href="https://github.com/Tushar-Bajpai/cadence" target="_blank" rel="noopener noreferrer" className="footer-col-link">
+                    API Reference
+                  </a>
+                </li>
+                <li>
+                  <a href="https://github.com/Tushar-Bajpai/cadence" target="_blank" rel="noopener noreferrer" className="footer-col-link">
+                    Help Center
+                  </a>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate(0)} className="footer-col-link cursor-pointer">
+                    Community
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="footer-col-head">Legal</h4>
+              <ul>
+                <li><a href="#" className="footer-col-link">Privacy Policy</a></li>
+                <li><a href="#" className="footer-col-link">Terms of Service</a></li>
+                <li><a href="#" className="footer-col-link">Cookie Policy</a></li>
+                <li>
+                  <Link href="/auth" className="footer-col-link">
+                    Portal Sitemap
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </nav>
         </div>
-        <button
-          onClick={() => onNavigate(0)}
-          className="font-mono text-white/50 hover:text-white transition cursor-pointer text-[10px] sm:text-sm"
-        >
-          ↑ RETURN TO OVERVIEW
-        </button>
-        <span>© 2026</span>
+
+        {/* Legal bar */}
+        <div className="flex flex-col items-start gap-2 border-t border-white/12 py-3.5 text-[10px] uppercase tracking-[0.14em] text-white/45 sm:flex-row sm:items-center sm:justify-between sm:text-[11px]">
+          <span>© 2026 Cadence by CodeLifters. All rights reserved.</span>
+          <button
+            onClick={() => onNavigate(0)}
+            className="font-mono text-white/50 hover:text-white transition cursor-pointer"
+          >
+            ↑ RETURN TO OVERVIEW
+          </button>
+          <span className="flex items-center gap-1.5 normal-case">
+            Made with
+            <Heart className="size-3 fill-[#8978ff] text-[#8978ff]" />
+            by
+            <a
+              href="https://codelifters.xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 text-white/80 hover:text-white"
+            >
+              CodeLifters
+            </a>
+          </span>
+        </div>
       </footer>
     </section>
   )
