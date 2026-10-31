@@ -51,8 +51,12 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
 
   const now = new Date()
 
-  return invoices.map((inv) => {
-    const isOverdue = inv.status === InvoiceStatus.CONFIRMED && new Date(inv.dueDate) < now
+  const mapped = invoices.map((inv) => {
+    const total = Number(inv.total)
+    const amountPaid = Number(inv.amountPaid)
+    const outstanding = Math.max(0, total - amountPaid)
+    const isOverdue =
+      inv.status === InvoiceStatus.CONFIRMED && new Date(inv.dueDate) < now && outstanding > 0
     const displayStatus = isOverdue ? 'OVERDUE' : inv.status
     const latestPayment = inv.payments[0]
 
@@ -70,14 +74,22 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
       companyName: inv.customer.companyName,
       planName: inv.subscription.plan.name,
       description: `${inv.subscription.plan.name} – Monthly`,
-      amount: Number(inv.total),
+      amount: total,
       formattedAmount: formatCurrency(inv.total),
-      amountPaid: Number(inv.amountPaid),
+      amountPaid: amountPaid,
       formattedAmountPaid: formatCurrency(inv.amountPaid),
+      outstanding,
+      formattedOutstanding: formatCurrency(outstanding),
       status: displayStatus,
       paidAt: latestPayment ? formatDate(latestPayment.date) : null,
       linesCount: inv.lines.length,
     }
   })
+
+  if (status === 'OVERDUE') {
+    return mapped.filter((inv) => inv.status === 'OVERDUE')
+  }
+
+  return mapped
 })
 

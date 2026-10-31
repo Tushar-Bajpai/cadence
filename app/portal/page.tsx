@@ -6,6 +6,7 @@ import {
   PortalTab,
 } from '@/components/portal/portal-top-navbar'
 import { PaymentCardModal } from '@/components/portal/payment-card-modal'
+import { RazorpayPaymentModal } from '@/components/razorpay-payment-modal'
 import { CatalogView } from '@/components/portal/catalog-view'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
 import {
@@ -46,6 +47,8 @@ export default function CustomerPortalPage() {
   const [isCardModalOpen, setIsCardModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetailData | null>(null)
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
+  const [razorpayInvoice, setRazorpayInvoice] = useState<{ id: string; seq: number; amount: number; formattedAmount: string } | null>(null)
+  const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false)
 
   // Active Payment Method State (dynamically loaded from DB)
   const [paymentMethod, setPaymentMethod] = useState<{
@@ -108,21 +111,24 @@ export default function CustomerPortalPage() {
     }
   }
 
-  // Quick pay invoice from table
-  const handlePayInvoice = async (invoiceId: string) => {
-    try {
-      const res = await fetch(`/api/portal/invoices/${invoiceId}/pay`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Payment failed')
-      setBannerNotice(data.message || 'Invoice paid successfully!')
-      setTimeout(() => setBannerNotice(null), 4000)
-      fetchPortalData()
-    } catch (err: any) {
-      alert(err.message || 'Payment error')
-    }
+  // Quick pay invoice from table — opens Razorpay checkout
+  const handlePayInvoice = (invoiceId: string) => {
+    const inv = invoices.find((i: any) => i.id === invoiceId)
+    if (!inv) return
+    setRazorpayInvoice({
+      id: inv.id,
+      seq: inv.seq,
+      amount: inv.balanceDue > 0 ? inv.balanceDue : inv.total,
+      formattedAmount: inv.balanceDue > 0 ? inv.formattedBalanceDue : inv.formattedTotal,
+    })
+    setIsRazorpayModalOpen(true)
+  }
+
+  const handleRazorpaySuccess = () => {
+    setBannerNotice('Payment successful! Invoice updated.')
+    setTimeout(() => setBannerNotice(null), 4000)
+    setIsRazorpayModalOpen(false)
+    fetchPortalData()
   }
 
   // Self-service subscription lifecycle actions
@@ -980,6 +986,7 @@ export default function CustomerPortalPage() {
         invoice={selectedInvoice}
         isOpen={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
+        mode="portal"
         onRefresh={() => {
           fetchPortalData()
           if (selectedInvoice) handleOpenInvoiceModal(selectedInvoice.id)
@@ -996,6 +1003,20 @@ export default function CustomerPortalPage() {
           setTimeout(() => setBannerNotice(null), 3000)
         }}
       />
+
+      {/* Razorpay Payment Modal */}
+      {razorpayInvoice && (
+        <RazorpayPaymentModal
+          isOpen={isRazorpayModalOpen}
+          onClose={() => { setIsRazorpayModalOpen(false); setRazorpayInvoice(null); }}
+          onSuccess={handleRazorpaySuccess}
+          invoiceId={razorpayInvoice.id}
+          invoiceSeq={razorpayInvoice.seq}
+          amount={razorpayInvoice.amount}
+          formattedAmount={razorpayInvoice.formattedAmount}
+          mode="portal"
+        />
+      )}
     </div>
   )
 }

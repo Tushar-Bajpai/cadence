@@ -17,6 +17,7 @@ import {
   IconExternalLink,
   IconUser,
   IconShieldLock,
+  IconCreditCard,
 } from '@tabler/icons-react'
 
 interface TopNavbarProps {
@@ -46,6 +47,11 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
       name: 'Invoices',
       href: '/admin/invoices',
       icon: IconShoppingBag,
+    },
+    {
+      name: 'Payments',
+      href: '/admin/payments',
+      icon: IconCreditCard,
     },
     {
       name: 'Subscriptions',
