@@ -4,18 +4,19 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  Home,
-  Users,
-  ShoppingBag,
-  ScrollText,
-  Box,
-  Search,
-  Settings,
-  Zap,
-  ExternalLink,
-  Tag,
-  User,
-} from 'lucide-react'
+  IconSmartHome,
+  IconUsers,
+  IconShoppingBag,
+  IconReceipt2,
+  IconBox,
+  IconTag,
+  IconSearch,
+  IconSettings,
+  IconBolt,
+  IconExternalLink,
+  IconUser,
+  IconShieldLock,
+} from '@tabler/icons-react'
 
 interface TopNavbarProps {
   onRunBillingClick: () => void
@@ -33,32 +34,32 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
     {
       name: 'Dashboard',
       href: '/admin',
-      icon: Home,
+      icon: IconSmartHome,
     },
     {
       name: 'Customers',
       href: '/admin/customers',
-      icon: Users,
+      icon: IconUsers,
     },
     {
       name: 'Invoices',
       href: '/admin/invoices',
-      icon: ShoppingBag,
+      icon: IconShoppingBag,
     },
     {
       name: 'Subscriptions',
       href: '/admin/subscriptions',
-      icon: ScrollText,
+      icon: IconReceipt2,
     },
     {
       name: 'Products & Plans',
       href: '/admin/products',
-      icon: Box,
+      icon: IconBox,
     },
     {
       name: 'Taxes & Discounts',
       href: '/admin/discounts',
-      icon: Tag,
+      icon: IconTag,
     },
   ]
 
@@ -112,7 +113,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                       : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/10'
                   }`}
                 >
-                  <Icon className="w-[18px] h-[18px] transition-transform group-hover:scale-105" strokeWidth={1.9} />
+                  <Icon size={19} stroke={1.8} className="transition-transform group-hover:scale-105" />
 
                   {/* Tooltip on hover */}
                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#120e28] text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl border border-white/15 z-50">
@@ -131,7 +132,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             onSubmit={handleSearchSubmit}
             className="relative flex-1 max-w-xs hidden sm:block"
           >
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" strokeWidth={1.8} />
+            <IconSearch size={15} stroke={1.8} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
             <input
               type="text"
               value={searchQuery}
@@ -147,7 +148,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             className="hidden xl:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white/80 hover:text-white text-xs font-medium transition cursor-pointer"
             title="Open Customer Billing Portal"
           >
-            <Box className="w-3.5 h-3.5 text-[#8978ff]" />
+            <IconBox size={15} stroke={1.8} className="text-[#8978ff]" />
             <span>Portal</span>
           </Link>
 
@@ -157,7 +158,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             title="Execute Idempotent Billing Cycle"
             className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_2px_14px_rgba(137,120,255,0.35)] transition-all whitespace-nowrap cursor-pointer active:scale-95"
           >
-            <Zap className="w-3.5 h-3.5 fill-white" />
+            <IconBolt size={15} stroke={2} className="fill-white text-white" />
             <span>Run Billing</span>
           </button>
 
@@ -168,7 +169,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
               title="Settings & Tools"
               className="w-9 h-9 rounded-xl bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/10 flex items-center justify-center transition-all cursor-pointer active:scale-95"
             >
-              <Settings className="w-4 h-4" strokeWidth={1.8} />
+              <IconSettings size={18} stroke={1.8} />
             </button>
 
             {showSettingsMenu && (
@@ -180,7 +181,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
                 >
-                  <Zap className="w-4 h-4 text-[#8978ff]" />
+                  <IconBolt size={16} stroke={1.8} className="text-[#8978ff]" />
                   <span>Run Invoicing Batch</span>
                 </button>
                 <button
@@ -190,7 +191,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
                 >
-                  <User className="w-4 h-4 text-[#8978ff]" />
+                  <IconUser size={16} stroke={1.8} className="text-[#8978ff]" />
                   <span>Operations Profile</span>
                 </button>
                 <Link
@@ -198,7 +199,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium"
                   onClick={() => setShowSettingsMenu(false)}
                 >
-                  <Box className="w-4 h-4 text-[#8978ff]" />
+                  <IconBox size={16} stroke={1.8} className="text-[#8978ff]" />
                   <span>Customer Billing Portal</span>
                 </Link>
                 <Link
@@ -206,7 +207,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
                   onClick={() => setShowSettingsMenu(false)}
                 >
-                  <ExternalLink className="w-4 h-4 text-white/50" />
+                  <IconExternalLink size={16} stroke={1.8} className="text-white/50" />
                   <span>Landing Magazine</span>
                 </Link>
                 <Link
@@ -214,7 +215,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
                   onClick={() => setShowSettingsMenu(false)}
                 >
-                  <Users className="w-4 h-4 text-white/50" />
+                  <IconUsers size={16} stroke={1.8} className="text-white/50" />
                   <span>Authentication Portal</span>
                 </Link>
               </div>

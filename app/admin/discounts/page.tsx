@@ -110,7 +110,7 @@ export default function DiscountsPage() {
 
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-4xl font-extrabold text-white">
-                    {disc.type === 'PERCENTAGE' ? `${disc.value}%` : `$${disc.value}`}
+                    {disc.type === 'PERCENTAGE' ? `${disc.value}%` : `₹${disc.value}`}
                   </span>
                   <span className="text-xs text-white/50 font-mono">OFF</span>
                 </div>
@@ -209,7 +209,7 @@ export default function DiscountsPage() {
                     className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none"
                   >
                     <option value="PERCENTAGE" className="bg-[#120e28] text-white">Percentage (%)</option>
-                    <option value="FIXED" className="bg-[#120e28] text-white">Fixed Amount ($)</option>
+                    <option value="FIXED" className="bg-[#120e28] text-white">Fixed Amount (₹)</option>
                   </select>
                 </div>
                 <div>

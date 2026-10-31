@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
                     </span>
                     <div className="mt-3 flex items-baseline gap-1.5">
                       <span className="text-3xl font-extrabold text-white tracking-tight">
-                        {stats?.formattedMrr || '$0.00'}
+                        {stats?.formattedMrr || '₹0.00'}
                       </span>
                       <span className="text-xs text-white/50 font-mono">/ Month</span>
                     </div>
@@ -178,7 +178,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="text-base font-bold text-white tracking-tight">
-                      {stats?.formattedTotalRevenue || '$0.00'}
+                      {stats?.formattedTotalRevenue || '₹0.00'}
                     </span>
                     <span className="text-xs font-mono font-bold text-amber-400">
                       {stats?.overdueInvoicesCount ? `${stats.overdueInvoicesCount} Due` : '0 Overdue'}
@@ -304,7 +304,7 @@ export default function AdminDashboardPage() {
                             {inv.description}
                           </td>
                           <td className="py-4 px-6 text-white font-bold whitespace-nowrap">
-                            ${Number(inv.amount).toFixed(2)}
+                            ₹{Number(inv.amount).toFixed(2)}
                           </td>
                           <td className="py-4 px-6 whitespace-nowrap">
                             {isPaid ? (

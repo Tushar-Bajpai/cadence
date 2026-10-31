@@ -242,7 +242,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
             Products, Variants & <em className="italic text-[#8978ff] font-serif">Billing Plans</em>
           </h2>
           <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-2xl leading-relaxed">
-            Select contract recurrence, configure modular variant add-ons (such as Odoo integration +$560), and preview real-time tax breakdowns.
+            Select contract recurrence, configure modular variant add-ons (such as Odoo integration +₹560), and preview real-time tax breakdowns.
           </p>
         </div>
 
@@ -314,7 +314,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
 
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-3xl font-extrabold text-white tracking-tight">
-                      ${Number(plan.price).toFixed(2)}
+                      ₹{Number(plan.price).toFixed(2)}
                     </span>
                     <span className="text-xs text-white/50">
                       /{plan.billingPeriod.toLowerCase()}
@@ -418,7 +418,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
                     </div>
                   )}
 
-                  {/* Product Variants (e.g. Odoo brand +$560) */}
+                  {/* Product Variants (e.g. Odoo brand +₹560) */}
                   {prod.variants?.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
                       <span className="text-[10px] font-mono uppercase tracking-wider text-white/40 block">
@@ -449,7 +449,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
                                 </span>
                               </div>
                               <span className={`font-mono font-bold ${isVarSelected ? 'text-white' : 'text-[#8978ff]'}`}>
-                                +${Number(v.extraPrice).toFixed(2)}
+                                +₹${Number(v.extraPrice).toFixed(2)}
                               </span>
                             </button>
                           )
@@ -558,12 +558,12 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
                     <span className="text-[11px] text-white/40">{selectedProduct.type}</span>
                   </div>
                   <span className="font-mono font-semibold text-white">
-                    ${Number(selectedProduct.salesPrice).toFixed(2)}
+                    ₹{Number(selectedProduct.salesPrice).toFixed(2)}
                   </span>
                 </div>
               )}
 
-              {/* Variant Addon Line (e.g. Odoo connector +$560) */}
+              {/* Variant Addon Line (e.g. Odoo connector +₹560) */}
               {selectedVariant && (
                 <div className="flex items-center justify-between py-1.5 border-b border-white/5 bg-[#8978ff]/10 p-2.5 rounded-xl border border-[#8978ff]/20">
                   <div>
@@ -573,7 +573,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
                     <span className="text-[11px] text-white/40">Modular variant addon</span>
                   </div>
                   <span className="font-mono font-bold text-[#8978ff]">
-                    +${Number(selectedVariant.extraPrice).toFixed(2)}
+                    +₹{Number(selectedVariant.extraPrice).toFixed(2)}
                   </span>
                 </div>
               )}
@@ -615,13 +615,13 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between text-white/60">
                 <span>Subtotal ({quantity} {quantity === 1 ? 'unit' : 'units'}):</span>
-                <span className="font-mono font-semibold text-white">${subtotal.toFixed(2)}</span>
+                <span className="font-mono font-semibold text-white">₹{subtotal.toFixed(2)}</span>
               </div>
 
               {taxPercent > 0 && (
                 <div className="flex items-center justify-between text-white/60">
                   <span>Estimated Taxes ({taxPercent}%):</span>
-                  <span className="font-mono font-semibold text-white">${taxAmount.toFixed(2)}</span>
+                  <span className="font-mono font-semibold text-white">₹{taxAmount.toFixed(2)}</span>
                 </div>
               )}
 
@@ -629,7 +629,7 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
                 <div>
                   <span className="text-xs text-white/50 block">Recurring Cycle Total</span>
                   <span className="text-2xl font-extrabold text-white">
-                    ${grandTotal.toFixed(2)}
+                    ₹{grandTotal.toFixed(2)}
                   </span>
                 </div>
                 <span className="text-[11px] font-mono text-white/40">

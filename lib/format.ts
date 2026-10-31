@@ -12,10 +12,10 @@ export const formatInvoiceNumber = formatInvNumber
 
 export function formatCurrency(
   amount: number | string | { toString(): string },
-  currency: string = 'USD'
+  currency: string = 'INR'
 ): string {
   const num = typeof amount === 'number' ? amount : Number(amount.toString())
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: currency,
     maximumFractionDigits: 2,

@@ -222,7 +222,7 @@ export default function CustomerPortalPage() {
                           </div>
                           <div className="mt-4 flex items-baseline gap-1">
                             <span className="text-3xl sm:text-4xl font-extrabold text-white">
-                              ${summaryData.currentPlan.price}
+                              ₹{summaryData.currentPlan.price}
                             </span>
                             <span className="text-sm text-white/50">
                               / {summaryData.currentPlan.periodLabel || 'Month'}
@@ -352,7 +352,7 @@ export default function CustomerPortalPage() {
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-white/10 text-[11px] text-white/40 flex items-center justify-between">
-                    <span>Outstanding: {summaryData?.metrics?.formattedTotalOutstanding || '$0.00'}</span>
+                    <span>Outstanding: {summaryData?.metrics?.formattedTotalOutstanding || '₹0.00'}</span>
                     <button
                       onClick={() => setActiveTab('catalog')}
                       className="text-[#8978ff] hover:underline cursor-pointer"
