@@ -226,6 +226,45 @@
   letter-spacing: -0.04em;
 }
 
+/* Maximalist editorial display system for the magazine spreads */
+.display-stretch {
+  font-size: clamp(2.9rem, 9.5vw, 8.75rem);
+  line-height: 0.8;
+  letter-spacing: -0.035em;
+  font-weight: 400;
+  text-transform: lowercase;
+}
+.display-stretch em {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: #8978ff;
+}
+@media (max-width: 640px) {
+  .display-stretch { font-size: clamp(2.4rem, 11.5vw, 4rem); line-height: 0.86; }
+}
+.text-hollow {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.26);
+}
+@media (max-width: 640px) {
+  .text-hollow { -webkit-text-stroke-width: 1px; }
+}
+.spread-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  transition: background-color 0.35s ease, padding-left 0.35s ease;
+}
+.spread-row:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  padding-left: 0.75rem;
+}
+.spread-row:last-child { border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+.spread-lead {
+  font-size: clamp(0.95rem, 1.5vw, 1.3rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .magazine-page {
   position: absolute;
   inset: 0;
