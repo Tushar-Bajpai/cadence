@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum BillingPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+enum DiscountScope {
+  PRODUCT
+  SUBSCRIPTION
+}
+
+enum TaxType {
+  PERCENTAGE
+  FIXED
+}
+
+enum SubStatus {
+  DRAFT
+  QUOTATION
+  CONFIRMED
+  ACTIVE
+  CLOSED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+  CANCELLED
+}
+
+enum PayMethod {
+  CARD
+  BANK_TRANSFER
+  UPI
+  CASH
+  CHEQUE
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique // lowercase before saving
+  passwordHash     String
+  role             Role      @default(CUSTOMER)
+  resetTokenHash   String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  customer         Customer?
+}
+
+model Customer {
+  id            String         @id @default(cuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id])
+  companyName   String?
+  phone         String?
+  address       String?
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  payments      Payment[]
+}
+
+model Tax {
+  id       String       @id @default(cuid())
+  name     String
+  type     TaxType
+  value    Decimal      @db.Decimal(10, 2)
+  isActive Boolean      @default(true)
+  products ProductTax[]
+}
+
+model Product {
+  id         String            @id @default(cuid())
+  name       String
+  type       String
+  salesPrice Decimal           @db.Decimal(12, 2)
+  costPrice  Decimal           @db.Decimal(12, 2)
+  notes      String?
+  isActive   Boolean           @default(true)
+  variants   ProductVariant[]
+  taxes      ProductTax[]
+  discounts  DiscountProduct[]
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attribute  String
+  value      String
+  extraPrice Decimal  @default(0) @db.Decimal(12, 2)
+
+  @@index([productId])
+}
+
+model ProductTax {
+  productId String
+  taxId     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tax       Tax     @relation(fields: [taxId], references: [id])
+
+  @@id([productId, taxId])
+}
+
+model Plan {
+  id             String              @id @default(cuid())
+  name           String
+  price          Decimal             @db.Decimal(12, 2)
+  billingPeriod  BillingPeriod
+  minQuantity    Int                 @default(1)
+  availableFrom  DateTime
+  availableTo    DateTime?
+  autoCloseOnEnd Boolean             @default(false)
+  closable       Boolean             @default(true)
+  pausable       Boolean             @default(false)
+  renewable      Boolean             @default(true)
+  isActive       Boolean             @default(true)
+  subscriptions  Subscription[]
+  templates      QuotationTemplate[]
+}
+
+model QuotationTemplate {
+  id           String                  @id @default(cuid())
+  name         String
+  planId       String
+  plan         Plan                    @relation(fields: [planId], references: [id])
+  validityDays Int
+  lines        QuotationTemplateLine[]
+}
+
+model QuotationTemplateLine {
+  id         String            @id @default(cuid())
+  templateId String
+  template   QuotationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  productId  String
+  variantId  String?
+  quantity   Int
+}
+
+model Discount {
+  id            String                 @id @default(cuid())
+  name          String
+  type          DiscountType
+  value         Decimal                @db.Decimal(12, 2)
+  scope         DiscountScope
+  minPurchase   Decimal?               @db.Decimal(12, 2)
+  minQuantity   Int?
+  startDate     DateTime
+  endDate       DateTime
+  usageLimit    Int
+  usedCount     Int                    @default(0)
+  isActive      Boolean                @default(true)
+  products      DiscountProduct[]
+  subscriptions SubscriptionDiscount[]
+}
+
+model DiscountProduct {
+  discountId String
+  productId  String
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id])
+
+  @@id([discountId, productId])
+}
+
+model Subscription {
+  id                String                 @id @default(cuid())
+  seq               Int                    @unique @default(autoincrement()) // number = "SUB-" + seq padded to 6
+  customerId        String
+  customer          Customer               @relation(fields: [customerId], references: [id])
+  planId            String
+  plan              Plan                   @relation(fields: [planId], references: [id])
+  status            SubStatus              @default(DRAFT)
+  isPaused          Boolean                @default(false)
+  startDate         DateTime
+  expiryDate        DateTime
+  paymentTermDays   Int                    @default(15) // due date = issue date + this
+  nextBillingDate   DateTime?
+  lastBilledThrough DateTime?
+  createdById       String?
+  createdAt         DateTime               @default(now())
+  lines             SubscriptionLine[]
+  discounts         SubscriptionDiscount[]
+  invoices          Invoice[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([status, isPaused, nextBillingDate]) // the billing-run query
+}
+
+model SubscriptionLine {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  productId      String
+  variantId      String?
+  description    String
+  quantity       Int
+  unitPrice      Decimal      @db.Decimal(12, 2)
+  taxRate        Decimal      @default(0) @db.Decimal(10, 2) // snapshot of tax at time of adding
+  taxType        TaxType      @default(PERCENTAGE)
+  amount         Decimal      @db.Decimal(12, 2)
+
+  @@index([subscriptionId])
+}
+
+model SubscriptionDiscount {
+  subscriptionId String
+  discountId     String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  discount       Discount     @relation(fields: [discountId], references: [id])
+
+  @@id([subscriptionId, discountId])
+}
+
+model Invoice {
+  id             String                @id @default(cuid())
+  seq            Int                   @unique @default(autoincrement()) // "INV-" + seq padded
+  subscriptionId String
+  subscription   Subscription          @relation(fields: [subscriptionId], references: [id])
+  customerId     String
+  customer       Customer              @relation(fields: [customerId], references: [id])
+  status         InvoiceStatus         @default(DRAFT)
+  periodStart    DateTime
+  periodEnd      DateTime
+  issueDate      DateTime              @default(now())
+  dueDate        DateTime
+  subtotal       Decimal               @db.Decimal(12, 2)
+  taxTotal       Decimal               @db.Decimal(12, 2)
+  discountTotal  Decimal               @default(0) @db.Decimal(12, 2)
+  total          Decimal               @db.Decimal(12, 2)
+  amountPaid     Decimal               @default(0) @db.Decimal(12, 2)
+  sentAt         DateTime?
+  lines          InvoiceLine[]
+  discountLines  InvoiceDiscountLine[]
+  payments       Payment[]
+
+  @@unique([subscriptionId, periodStart]) // <- "never bill twice" guarantee
+  @@index([status, dueDate])
+  @@index([customerId])
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(12, 2)
+  taxAmount   Decimal @db.Decimal(12, 2)
+  amount      Decimal @db.Decimal(12, 2)
+
+  @@index([invoiceId])
+}
+
+model InvoiceDiscountLine {
+  id         String  @id @default(cuid())
+  invoiceId  String
+  invoice    Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  discountId String
+  label      String
+  amount     Decimal @db.Decimal(12, 2)
+
+  @@index([invoiceId])
+}
+
+model Payment {
+  id           String    @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice   @relation(fields: [invoiceId], references: [id])
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id])
+  method       PayMethod
+  amount       Decimal   @db.Decimal(12, 2)
+  date         DateTime
+  note         String?
+  recordedById String?
+
+  @@index([invoiceId])
+  @@index([date])
+}

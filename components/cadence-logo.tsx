@@ -115,3 +115,4 @@ export function CadenceLogo({ className = 'size-8', glow = true, ...props }: Cad
     </svg>
   )
 }
+
