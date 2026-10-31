@@ -124,41 +124,41 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
           </nav>
         </div>
 
-        {/* Right Section: Long Search Bar + Settings Gear Icon Button */}
-        <div className="flex items-center gap-2.5 flex-1 max-w-md justify-end">
+        {/* Right Section: Search Bar + Run Billing + Settings + Avatar */}
+        <div className="flex items-center gap-2 flex-1 max-w-lg justify-end">
           {/* Search bar matching screenshot */}
           <form
             onSubmit={handleSearchSubmit}
-            className="relative flex-1 max-w-sm hidden sm:block"
+            className="relative flex-1 max-w-xs hidden sm:block"
           >
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" strokeWidth={1.8} />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" strokeWidth={1.8} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search here ..."
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-[11px] bg-white/[0.04] text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition-all"
+              className="w-full h-9 pl-8 pr-3 text-xs rounded-xl bg-white/[0.04] text-white placeholder-white/35 border border-white/10 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition-all"
             />
           </form>
 
           {/* Quick link to Customer Portal */}
           <Link
             href="/portal"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-[11px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white/80 hover:text-white text-xs font-medium transition cursor-pointer"
+            className="hidden xl:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white/80 hover:text-white text-xs font-medium transition cursor-pointer"
             title="Open Customer Billing Portal"
           >
             <Box className="w-3.5 h-3.5 text-[#8978ff]" />
-            <span>Customer Portal</span>
+            <span>Portal</span>
           </Link>
 
           {/* Quick Billing Engine Run Action */}
           <button
             onClick={onRunBillingClick}
             title="Execute Idempotent Billing Cycle"
-            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-[11px] bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_4px_20px_rgba(137,120,255,0.35)] transition-all whitespace-nowrap cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_2px_14px_rgba(137,120,255,0.35)] transition-all whitespace-nowrap cursor-pointer active:scale-95"
           >
             <Zap className="w-3.5 h-3.5 fill-white" />
-            <span>Run Billing ⚡</span>
+            <span>Run Billing</span>
           </button>
 
           {/* Settings Gear icon matching screenshot */}
@@ -166,19 +166,19 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             <button
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
               title="Settings & Tools"
-              className="w-10 h-10 rounded-[11px] bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.08] border border-white/10 flex items-center justify-center transition-all cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/10 flex items-center justify-center transition-all cursor-pointer active:scale-95"
             >
-              <Settings className="w-[18px] h-[18px]" strokeWidth={1.8} />
+              <Settings className="w-4 h-4" strokeWidth={1.8} />
             </button>
 
             {showSettingsMenu && (
-              <div className="absolute right-0 mt-2 w-52 bg-[#120e28] rounded-xl border border-white/15 shadow-2xl p-1.5 z-50 text-xs space-y-1 backdrop-blur-xl">
+              <div className="absolute right-0 mt-2 w-52 bg-[#120e28] rounded-2xl border border-white/15 shadow-2xl p-1.5 z-50 text-xs space-y-1 backdrop-blur-xl animate-in fade-in duration-150">
                 <button
                   onClick={() => {
                     setShowSettingsMenu(false)
                     onRunBillingClick()
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
                 >
                   <Zap className="w-4 h-4 text-[#8978ff]" />
                   <span>Run Invoicing Batch</span>
@@ -188,22 +188,30 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                     setShowSettingsMenu(false)
                     if (onCustomerModalClick) onCustomerModalClick()
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
                 >
                   <User className="w-4 h-4 text-[#8978ff]" />
                   <span>Operations Profile</span>
                 </button>
                 <Link
+                  href="/portal"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium"
+                  onClick={() => setShowSettingsMenu(false)}
+                >
+                  <Box className="w-4 h-4 text-[#8978ff]" />
+                  <span>Customer Billing Portal</span>
+                </Link>
+                <Link
                   href="/"
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
                   onClick={() => setShowSettingsMenu(false)}
                 >
                   <ExternalLink className="w-4 h-4 text-white/50" />
-                  <span>Switch to Magazine View</span>
+                  <span>Landing Magazine</span>
                 </Link>
                 <Link
                   href="/auth"
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
                   onClick={() => setShowSettingsMenu(false)}
                 >
                   <Users className="w-4 h-4 text-white/50" />
@@ -213,13 +221,14 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             )}
           </div>
 
-          {/* User profile avatar pill */}
+          {/* User profile avatar */}
           <button
             onClick={onCustomerModalClick}
             title="Administrator Account"
-            className="w-10 h-10 rounded-[11px] bg-gradient-to-tr from-[#8978ff] to-[#6042ec] text-white font-bold text-xs flex items-center justify-center ring-1 ring-white/20 hover:scale-105 transition-transform cursor-pointer"
+            className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#1b1544] via-[#281e64] to-[#3a2c8a] border border-white/20 hover:border-[#8978ff] text-white/90 text-xs font-mono font-bold flex items-center justify-center shadow-inner hover:scale-105 transition-all cursor-pointer relative"
           >
-            AD
+            <span>AD</span>
+            <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#08061d]" />
           </button>
         </div>
       </div>
