@@ -128,3 +128,4 @@ export const DELETE = apiHandler(['ADMIN'], async (req: NextRequest, session, co
   await db.product.delete({ where: { id } })
   return { success: true, message: 'Product deleted permanently.' }
 })
+

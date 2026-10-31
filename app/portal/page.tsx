@@ -47,14 +47,14 @@ export default function CustomerPortalPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetailData | null>(null)
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
 
-  // Active Payment Method State
-  const [paymentMethod, setPaymentMethod] = useState({
-    brand: 'VISA',
-    last4: '6888',
-    maskedNumber: '1520 0100 3356 6888',
-    cardholder: 'ROBERT FOX',
-    validThru: '12/28',
-  })
+  // Active Payment Method State (dynamically loaded from DB)
+  const [paymentMethod, setPaymentMethod] = useState<{
+    brand: string
+    last4: string
+    maskedNumber: string
+    cardholder: string
+    validThru: string
+  } | null>(null)
 
   // Action status message
   const [bannerNotice, setBannerNotice] = useState<string | null>(null)
@@ -164,7 +164,7 @@ export default function CustomerPortalPage() {
       <PortalTopNavbar
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        customerName={summaryData?.customer?.name || 'Robert Fox'}
+        customerName={summaryData?.customer?.name || 'Customer'}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
@@ -203,81 +203,102 @@ export default function CustomerPortalPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Current Plan Card */}
                 <div className="rounded-3xl bg-white/[0.03] backdrop-blur-md border border-white/10 p-6 flex flex-col justify-between hover:border-white/15 transition relative overflow-hidden">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-xs text-white/50 block font-medium">
-                        Current Plan
-                      </span>
-                      <div className="mt-2.5 flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                          {summaryData?.currentPlan?.planName || 'Pro Plan'}
-                        </span>
-                        {summaryData?.currentPlan?.isPaused && (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                            Paused
+                  {summaryData?.currentPlan ? (
+                    <>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="text-xs text-white/50 block font-medium">
+                            Current Plan
                           </span>
-                        )}
-                      </div>
-                      <div className="mt-4 flex items-baseline gap-1">
-                        <span className="text-3xl sm:text-4xl font-extrabold text-white">
-                          ${summaryData?.currentPlan?.price || 29}
-                        </span>
-                        <span className="text-sm text-white/50">
-                          / {summaryData?.currentPlan?.periodLabel || 'Month'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-white/40 mt-1">
-                        Next billing cycle on {summaryData?.currentPlan?.nextBillingDate || '01 Sep 2026'}
-                      </p>
-                    </div>
+                          <div className="mt-2.5 flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                              {summaryData.currentPlan.planName}
+                            </span>
+                            {summaryData.currentPlan.isPaused && (
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                Paused
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-4 flex items-baseline gap-1">
+                            <span className="text-3xl sm:text-4xl font-extrabold text-white">
+                              ${summaryData.currentPlan.price}
+                            </span>
+                            <span className="text-sm text-white/50">
+                              / {summaryData.currentPlan.periodLabel || 'Month'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-white/40 mt-1">
+                            Next renewal: {summaryData.currentPlan.nextBillingDate}
+                          </p>
+                        </div>
 
-                    {/* Upgrade button matching screenshot 1 */}
-                    <button
-                      onClick={() => setActiveTab('catalog')}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#0e0c24] border border-white/20 hover:border-[#8978ff] text-white hover:text-[#8978ff] text-xs font-semibold transition shadow-md cursor-pointer"
-                    >
-                      <span>Upgrade</span>
-                      <Rocket className="w-3.5 h-3.5 text-[#8978ff]" />
-                    </button>
-                  </div>
-
-                  {/* Policy action triggers: Pause, Resume, Close */}
-                  {summaryData?.currentPlan?.subscriptionId && (
-                    <div className="mt-6 pt-4 border-t border-white/10 flex items-center gap-2 text-xs">
-                      {summaryData.currentPlan.isPaused ? (
                         <button
-                          onClick={() =>
-                            handleSubscriptionAction(summaryData.currentPlan.subscriptionId, 'resume')
-                          }
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 transition cursor-pointer"
+                          onClick={() => setActiveTab('catalog')}
+                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#0e0c24] border border-white/20 hover:border-[#8978ff] text-white hover:text-[#8978ff] text-xs font-semibold transition shadow-md cursor-pointer"
                         >
-                          <Play className="w-3 h-3" />
-                          <span>Resume Subscription</span>
+                          <span>Upgrade</span>
+                          <Rocket className="w-3.5 h-3.5 text-[#8978ff]" />
                         </button>
-                      ) : (
-                        summaryData.currentPlan.pausable && (
-                          <button
-                            onClick={() =>
-                              handleSubscriptionAction(summaryData.currentPlan.subscriptionId, 'pause')
-                            }
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
-                          >
-                            <Pause className="w-3 h-3" />
-                            <span>Pause Subscription</span>
-                          </button>
-                        )
-                      )}
+                      </div>
 
-                      {summaryData.currentPlan.closable && (
-                        <button
-                          onClick={() =>
-                            handleSubscriptionAction(summaryData.currentPlan.subscriptionId, 'close')
-                          }
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition cursor-pointer ml-auto"
-                        >
-                          <span>Cancel Plan</span>
-                        </button>
+                      {summaryData.currentPlan.subscriptionId && (
+                        <div className="mt-6 pt-4 border-t border-white/10 flex items-center gap-2 text-xs">
+                          {summaryData.currentPlan.isPaused ? (
+                            <button
+                              onClick={() =>
+                                handleSubscriptionAction(summaryData.currentPlan.subscriptionId, 'resume')
+                              }
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 transition cursor-pointer"
+                            >
+                              <Play className="w-3 h-3" />
+                              <span>Resume Subscription</span>
+                            </button>
+                          ) : (
+                            summaryData.currentPlan.pausable && (
+                              <button
+                                onClick={() =>
+                                  handleSubscriptionAction(summaryData.currentPlan.subscriptionId, 'pause')
+                                }
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                              >
+                                <Pause className="w-3 h-3" />
+                                <span>Pause Subscription</span>
+                              </button>
+                            )
+                          )}
+
+                          {summaryData.currentPlan.closable && (
+                            <button
+                              onClick={() =>
+                                handleSubscriptionAction(summaryData.currentPlan.subscriptionId, 'close')
+                              }
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition cursor-pointer ml-auto"
+                            >
+                              <span>Cancel Plan</span>
+                            </button>
+                          )}
+                        </div>
                       )}
+                    </>
+                  ) : (
+                    <div className="flex flex-col justify-between h-full py-2">
+                      <div>
+                        <span className="text-xs text-white/50 block font-medium">
+                          Current Plan
+                        </span>
+                        <h3 className="text-lg font-bold text-white mt-2">No Active Subscription</h3>
+                        <p className="text-xs text-white/40 mt-1">
+                          You currently do not have an active billing plan. Browse our plans to subscribe.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('catalog')}
+                        className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold transition cursor-pointer w-full sm:w-auto self-start"
+                      >
+                        <span>Choose a Plan</span>
+                        <Rocket className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -286,57 +307,57 @@ export default function CustomerPortalPage() {
                 <div className="rounded-3xl bg-white/[0.03] backdrop-blur-md border border-white/10 p-6 flex flex-col justify-between hover:border-white/15 transition">
                   <div>
                     <span className="text-xs text-white/50 block font-medium">
-                      Usage Summary
+                      Usage & Billing Cycle
                     </span>
 
                     <div className="mt-5 space-y-5">
-                      {/* Meter 1: API Requests Used */}
+                      {/* Meter 1: Billing Cycle Progress */}
                       <div>
                         <div className="flex items-center justify-between text-xs mb-1.5">
                           <span className="font-semibold text-white">
-                            8,500 / 10,000
+                            {summaryData?.usage?.cycleProgress?.usedDays ?? 0} / {summaryData?.usage?.cycleProgress?.totalDays ?? 30} Days
                           </span>
-                          <span className="text-white/40">85%</span>
+                          <span className="text-white/40">{summaryData?.usage?.cycleProgress?.percentage ?? 0}%</span>
                         </div>
                         <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-[#8978ff] shadow-[0_0_8px_rgba(137,120,255,0.6)]"
-                            style={{ width: '85%' }}
+                            className="h-full rounded-full bg-[#8978ff] shadow-[0_0_8px_rgba(137,120,255,0.6)] transition-all duration-500"
+                            style={{ width: `${summaryData?.usage?.cycleProgress?.percentage ?? 0}%` }}
                           />
                         </div>
                         <span className="text-[11px] text-white/40 mt-1 block">
-                          API Requests Used
+                          Current Billing Cycle Progress
                         </span>
                       </div>
 
-                      {/* Meter 2: Storage Used */}
+                      {/* Meter 2: Invoices Settled Rate */}
                       <div>
                         <div className="flex items-center justify-between text-xs mb-1.5">
                           <span className="font-semibold text-white">
-                            2 GB / 5 GB
+                            {summaryData?.usage?.invoicingProgress?.settled ?? 0} / {summaryData?.usage?.invoicingProgress?.total ?? 0} Invoices
                           </span>
-                          <span className="text-white/40">40%</span>
+                          <span className="text-white/40">{summaryData?.usage?.invoicingProgress?.percentage ?? 100}%</span>
                         </div>
                         <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-amber-400/80 shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                            style={{ width: '40%' }}
+                            className="h-full rounded-full bg-emerald-400/80 shadow-[0_0_8px_rgba(52,211,153,0.5)] transition-all duration-500"
+                            style={{ width: `${summaryData?.usage?.invoicingProgress?.percentage ?? 100}%` }}
                           />
                         </div>
                         <span className="text-[11px] text-white/40 mt-1 block">
-                          Storage Used
+                          Settled Invoices Rate
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-white/10 text-[11px] text-white/40 flex items-center justify-between">
-                    <span>Cycle resets on 01 Sep 2026</span>
+                    <span>Outstanding: {summaryData?.metrics?.formattedTotalOutstanding || '$0.00'}</span>
                     <button
                       onClick={() => setActiveTab('catalog')}
                       className="text-[#8978ff] hover:underline cursor-pointer"
                     >
-                      Increase Quota &rarr;
+                      Manage Plan &rarr;
                     </button>
                   </div>
                 </div>
@@ -462,43 +483,52 @@ export default function CustomerPortalPage() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Visual VISA Card */}
-                <div className="relative h-48 rounded-3xl p-6 flex flex-col justify-between overflow-hidden shadow-2xl border border-white/20 bg-gradient-to-tr from-[#2d2218] via-[#5c492c] to-[#92784d] group">
-                  {/* Subtle noise and light shimmer */}
-                  <div className="absolute inset-0 bg-white/5 opacity-20 pointer-events-none" />
-                  <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+                {/* Visual Card (Rendered if payment method exists) */}
+                {paymentMethod ? (
+                  <div className="relative h-48 rounded-3xl p-6 flex flex-col justify-between overflow-hidden shadow-2xl border border-white/20 bg-gradient-to-tr from-[#2d2218] via-[#5c492c] to-[#92784d] group">
+                    <div className="absolute inset-0 bg-white/5 opacity-20 pointer-events-none" />
+                    <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
 
-                  {/* Top: VISA Logo + Options Menu */}
-                  <div className="flex items-center justify-between relative z-10">
-                    <span className="font-extrabold text-xl italic tracking-wider text-white/95">
-                      VISA
-                    </span>
-                    <button className="p-1 rounded-full bg-white/10 hover:bg-white/20 text-white/80 transition cursor-pointer">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Middle: Card Number matching Screenshot 1 */}
-                  <div className="relative z-10 tracking-[0.2em] font-mono text-base sm:text-lg font-bold text-white drop-shadow">
-                    {paymentMethod.maskedNumber}
-                  </div>
-
-                  {/* Bottom: Cardholder Name + Expiry */}
-                  <div className="flex items-center justify-between relative z-10 text-[10px] uppercase font-mono tracking-wider text-white/70">
-                    <div>
-                      <span className="text-[8px] text-white/40 block">NAME</span>
-                      <span className="font-semibold text-white">
-                        {paymentMethod.cardholder}
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="font-extrabold text-xl italic tracking-wider text-white/95">
+                        {paymentMethod.brand}
                       </span>
+                      <button className="p-1 rounded-full bg-white/10 hover:bg-white/20 text-white/80 transition cursor-pointer">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div>
-                      <span className="text-[8px] text-white/40 block">VALID THRU</span>
-                      <span className="font-semibold text-white">
-                        {paymentMethod.validThru}
-                      </span>
+
+                    <div className="relative z-10 tracking-[0.2em] font-mono text-base sm:text-lg font-bold text-white drop-shadow">
+                      {paymentMethod.maskedNumber}
+                    </div>
+
+                    <div className="flex items-center justify-between relative z-10 text-[10px] uppercase font-mono tracking-wider text-white/70">
+                      <div>
+                        <span className="text-[8px] text-white/40 block">NAME</span>
+                        <span className="font-semibold text-white">
+                          {paymentMethod.cardholder}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] text-white/40 block">VALID THRU</span>
+                        <span className="font-semibold text-white">
+                          {paymentMethod.validThru}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="h-48 rounded-3xl p-6 border border-white/10 bg-white/[0.02] flex flex-col justify-between">
+                    <div>
+                      <CreditCard className="w-6 h-6 text-[#8978ff] mb-2" />
+                      <h4 className="text-sm font-bold text-white">No Payment Method on File</h4>
+                      <p className="text-xs text-white/50 mt-1">
+                        Add a credit or debit card to streamline automated subscription renewals.
+                      </p>
+                    </div>
+                    <span className="text-[11px] text-white/40">Zero transaction fee on renewals</span>
+                  </div>
+                )}
 
                 {/* + Add New Card Card matching screenshot 1 */}
                 <button

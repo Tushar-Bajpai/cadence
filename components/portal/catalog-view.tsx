@@ -302,3 +302,4 @@ export function CatalogView({ onSubscriptionCreated }: CatalogViewProps) {
     </div>
   )
 }
+

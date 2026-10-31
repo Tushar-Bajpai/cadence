@@ -54,3 +54,4 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     latestPaymentDate: inv.payments[0] ? formatDate(inv.payments[0].date) : null,
   }))
 })
+

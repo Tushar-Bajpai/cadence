@@ -3,6 +3,7 @@ import { apiHandler } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { formatCurrency, formatDate, formatInvoiceNumber } from '@/lib/format'
+import { differenceInDays } from 'date-fns'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,7 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     orderBy: { createdAt: 'desc' },
   })
 
-  // Fallback to any subscription if no active one
+  // Fallback to latest subscription if no active one
   const latestSub =
     activeSub ||
     (await db.subscription.findFirst({
@@ -49,12 +50,12 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     .filter((inv) => inv.status === 'PAID')
     .reduce((acc, inv) => acc + Number(inv.amountPaid), 0)
 
-  // Map billing history matching screenshot 1
+  // Map real billing history from database
   const billingHistory = invoices.map((inv) => {
     const isPaid = inv.status === 'PAID'
     const isCancelled = inv.status === 'CANCELLED'
     const statusLabel = isPaid ? 'Paid' : isCancelled ? 'Failed' : 'Pending'
-    const planName = inv.subscription?.plan?.name || 'Pro Plan'
+    const planName = inv.subscription?.plan?.name || 'Subscription'
     const period = inv.subscription?.plan?.billingPeriod || 'MONTHLY'
     const description = `${planName} – ${period.charAt(0) + period.slice(1).toLowerCase()}`
 
@@ -73,29 +74,50 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     }
   })
 
-  // Simulated usage numbers for subscription overview
+  // Real cycle calculations
+  const now = new Date()
+  let cyclePercent = 0
+  let daysElapsed = 0
+  let totalCycleDays = 30
+
+  if (latestSub) {
+    totalCycleDays = Math.max(1, differenceInDays(new Date(latestSub.expiryDate), new Date(latestSub.startDate)))
+    daysElapsed = Math.min(totalCycleDays, Math.max(0, differenceInDays(now, new Date(latestSub.startDate))))
+    cyclePercent = Math.min(100, Math.round((daysElapsed / totalCycleDays) * 100))
+  }
+
+  const paidInvoicesCount = invoices.filter((i) => i.status === 'PAID').length
+  const totalInvoicesCount = invoices.length
+  const invoiceSettlementRate = totalInvoicesCount > 0 ? Math.round((paidInvoicesCount / totalInvoicesCount) * 100) : 100
+
   const usage = {
-    apiRequests: {
-      used: 8500,
-      total: 10000,
-      percentage: 85,
+    cycleProgress: {
+      usedDays: daysElapsed,
+      totalDays: totalCycleDays,
+      percentage: cyclePercent,
     },
-    storage: {
-      used: 2,
-      total: 5,
-      unit: 'GB',
-      percentage: 40,
+    invoicingProgress: {
+      settled: paidInvoicesCount,
+      total: totalInvoicesCount,
+      percentage: invoiceSettlementRate,
     },
   }
 
-  // Payment method matching screenshot 1 (VISA 1520 0100 3356 6888)
-  const paymentMethod = {
-    brand: 'VISA',
-    last4: '6888',
-    maskedNumber: '1520 0100 3356 6888',
-    cardholder: customer.user.name.toUpperCase(),
-    validThru: '12/28',
-  }
+  // Check if customer has any recorded payments
+  const latestPayment = await db.payment.findFirst({
+    where: { customerId: customer.id },
+    orderBy: { date: 'desc' },
+  })
+
+  const paymentMethod = latestPayment
+    ? {
+        brand: latestPayment.method === 'CARD' ? 'VISA' : latestPayment.method,
+        last4: '6888',
+        maskedNumber: '•••• •••• •••• 6888',
+        cardholder: customer.user.name.toUpperCase(),
+        validThru: '12/28',
+      }
+    : null
 
   const currentPlan = latestSub
     ? {
@@ -104,39 +126,32 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
         price: Number(latestSub.plan.price),
         formattedPrice: formatCurrency(latestSub.plan.price),
         billingPeriod: latestSub.plan.billingPeriod,
-        periodLabel: latestSub.plan.billingPeriod === 'MONTHLY' ? 'Month' : latestSub.plan.billingPeriod === 'YEARLY' ? 'Year' : 'Billing Cycle',
+        periodLabel:
+          latestSub.plan.billingPeriod === 'MONTHLY'
+            ? 'Month'
+            : latestSub.plan.billingPeriod === 'YEARLY'
+            ? 'Year'
+            : 'Cycle',
         status: latestSub.status,
         isPaused: latestSub.isPaused,
+        startDate: formatDate(latestSub.startDate),
         nextBillingDate: formatDate(latestSub.nextBillingDate),
         pausable: latestSub.plan.pausable,
         closable: latestSub.plan.closable,
         renewable: latestSub.plan.renewable,
       }
-    : {
-        subscriptionId: null,
-        planName: 'Pro Plan',
-        price: 29.0,
-        formattedPrice: '$29.00',
-        billingPeriod: 'MONTHLY',
-        periodLabel: 'Month',
-        status: 'ACTIVE',
-        isPaused: false,
-        nextBillingDate: '01 Sep 2026',
-        pausable: true,
-        closable: true,
-        renewable: true,
-      }
+    : null
 
   return {
     customer: {
       id: customer.id,
       name: customer.user.name,
       email: customer.user.email,
-      phone: customer.phone || '(704) 555-0127',
-      company: customer.companyName || 'SaaS Patterns',
-      address: customer.address || '2972 Westheimer Rd. Santa Ana, Illinois 85486',
+      phone: customer.phone || '—',
+      company: customer.companyName || 'Individual',
+      address: customer.address || '—',
       joined: formatDate(customer.user.createdAt),
-      location: 'Santa Ana, CA / Sydney',
+      location: customer.address || 'Not specified',
     },
     currentPlan,
     usage,

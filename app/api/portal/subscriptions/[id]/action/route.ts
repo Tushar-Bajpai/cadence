@@ -69,3 +69,4 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   throw new Error(`Invalid action: ${action}. Allowed: pause, resume, close`)
 })
+

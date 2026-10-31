@@ -163,14 +163,14 @@ export function AdminSidebar({ onRunBillingClick, onCustomerModalClick }: Sideba
           className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-white hover:shadow-xs border border-transparent hover:border-zinc-200/80 transition-all text-left"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 flex items-center justify-center text-amber-950 font-bold text-xs ring-2 ring-white">
-              RF
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#8978ff] to-[#6042ec] flex items-center justify-center text-white font-bold text-xs ring-2 ring-white/10">
+              AD
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold text-zinc-900 truncate">Robert Fox</p>
+              <p className="text-xs font-bold text-zinc-900 truncate">Admin Console</p>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-600" />
-                <span className="text-[10px] text-violet-700 font-semibold">Admin</span>
+                <span className="text-[10px] text-violet-700 font-semibold">Operations</span>
               </div>
             </div>
           </div>

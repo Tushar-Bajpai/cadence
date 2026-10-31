@@ -191,7 +191,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
                 >
                   <User className="w-4 h-4 text-[#8978ff]" />
-                  <span>Admin Profile (Robert Fox)</span>
+                  <span>Operations Profile</span>
                 </button>
                 <Link
                   href="/"
@@ -216,10 +216,10 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
           {/* User profile avatar pill */}
           <button
             onClick={onCustomerModalClick}
-            title="Robert Fox (Admin)"
+            title="Administrator Account"
             className="w-10 h-10 rounded-[11px] bg-gradient-to-tr from-[#8978ff] to-[#6042ec] text-white font-bold text-xs flex items-center justify-center ring-1 ring-white/20 hover:scale-105 transition-transform cursor-pointer"
           >
-            RF
+            AD
           </button>
         </div>
       </div>

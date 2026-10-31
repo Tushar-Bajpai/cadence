@@ -10,14 +10,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false)
   const [customerData, setCustomerData] = useState<CustomerModalData | null>(null)
 
-  // Fetch Robert Fox's profile for the customer modal
+  // Fetch primary customer profile for the operations modal
   const fetchCustomerProfile = async () => {
     try {
       const res = await fetch('/api/customers')
       const customers = await res.json()
-      const robert = customers.find((c: any) => c.name.includes('Robert')) || customers[0]
-      if (robert) {
-        const detailRes = await fetch(`/api/customers?id=${robert.id}`)
+      const firstCustomer = Array.isArray(customers) && customers.length > 0 ? customers[0] : null
+      if (firstCustomer) {
+        const detailRes = await fetch(`/api/customers?id=${firstCustomer.id}`)
         const detail = await detailRes.json()
         setCustomerData(detail)
       }

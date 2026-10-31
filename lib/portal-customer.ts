@@ -20,44 +20,11 @@ export async function getPortalCustomer(session: SessionPayload | null) {
     if (customer) return customer
   }
 
-  // 3. Fallback for Dev Preview (Robert Fox / Darrell Steward / First Customer)
-  const fallback = await db.customer.findFirst({
-    where: {
-      user: {
-        email: { in: ['robert.fox@example.com', 'darrell.steward@example.com', 'jackson.graham@example.com'] },
-      },
-    },
+  // 3. In dev mode without active cookie, resolve first existing customer from database
+  const existingCustomer = await db.customer.findFirst({
     include: { user: true },
+    orderBy: { user: { createdAt: 'asc' } },
   })
 
-  if (fallback) return fallback
-
-  // 4. Any customer
-  const anyCustomer = await db.customer.findFirst({
-    include: { user: true },
-  })
-
-  if (anyCustomer) return anyCustomer
-
-  // 5. If no customers exist at all, create demo Robert Fox
-  const demoUser = await db.user.upsert({
-    where: { email: 'robert.fox@example.com' },
-    update: { name: 'Robert Fox' },
-    create: {
-      email: 'robert.fox@example.com',
-      name: 'Robert Fox',
-      passwordHash: '$2a$10$wK6O8c19y7x2E904.Z096uJ9hZp1uP9qG1X4jF.fC4eB5r6t7y8u',
-      role: 'CUSTOMER',
-    },
-  })
-
-  return await db.customer.create({
-    data: {
-      userId: demoUser.id,
-      companyName: 'SaaS Patterns',
-      phone: '(704) 555-0127',
-      address: '2972 Westheimer Rd. Santa Ana, Illinois 85486',
-    },
-    include: { user: true },
-  })
+  return existingCustomer || null
 }

@@ -28,7 +28,7 @@ interface PortalTopNavbarProps {
 export function PortalTopNavbar({
   activeTab,
   onTabChange,
-  customerName = 'Robert Fox',
+  customerName = 'Subscriber',
   searchQuery,
   onSearchChange,
 }: PortalTopNavbarProps) {
@@ -197,3 +197,4 @@ export function PortalTopNavbar({
     </header>
   )
 }
+

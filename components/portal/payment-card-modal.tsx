@@ -23,12 +23,13 @@ export function PaymentCardModal({ isOpen, onClose, onSuccess }: PaymentCardModa
     setIsSubmitting(true)
     setTimeout(() => {
       setIsSubmitting(false)
+      const cleanNum = cardNumber.replace(/\s/g, '')
       onSuccess({
         brand: 'VISA',
-        last4: cardNumber.replace(/\s/g, '').slice(-4) || '8842',
-        maskedNumber: cardNumber || '4532 •••• •••• 8842',
-        cardholder: cardHolder.toUpperCase() || 'ROBERT FOX',
-        validThru: expiry || '08/29',
+        last4: cleanNum.slice(-4) || '0000',
+        maskedNumber: cardNumber || '•••• •••• •••• 0000',
+        cardholder: cardHolder.toUpperCase(),
+        validThru: expiry,
       })
       onClose()
     }, 600)
@@ -63,7 +64,7 @@ export function PaymentCardModal({ isOpen, onClose, onSuccess }: PaymentCardModa
               required
               value={cardHolder}
               onChange={(e) => setCardHolder(e.target.value)}
-              placeholder="e.g. Robert Fox"
+              placeholder="e.g. Jane Doe"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#8978ff] transition"
             />
           </div>
@@ -81,7 +82,7 @@ export function PaymentCardModal({ isOpen, onClose, onSuccess }: PaymentCardModa
                 const val = e.target.value.replace(/\D/g, '').replace(/(\d{4})/g, '$1 ').trim()
                 setCardNumber(val)
               }}
-              placeholder="1520 0100 3356 6888"
+              placeholder="4532 0000 0000 0000"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-white/30 focus:outline-none focus:border-[#8978ff] transition"
             />
           </div>
@@ -136,3 +137,4 @@ export function PaymentCardModal({ isOpen, onClose, onSuccess }: PaymentCardModa
     </div>
   )
 }
+

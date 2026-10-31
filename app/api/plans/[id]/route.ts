@@ -106,3 +106,4 @@ export const DELETE = apiHandler(['ADMIN'], async (req: NextRequest, session, co
   await db.plan.delete({ where: { id } })
   return { success: true, message: 'Plan deleted permanently.' }
 })
+
