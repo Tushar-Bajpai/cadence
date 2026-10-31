@@ -8,11 +8,16 @@ export function formatInvNumber(seq: number): string {
   return `INV-${String(seq).padStart(6, '0')}`
 }
 
-export function formatCurrency(amount: number | string | { toString(): string }): string {
+export const formatInvoiceNumber = formatInvNumber
+
+export function formatCurrency(
+  amount: number | string | { toString(): string },
+  currency: string = 'USD'
+): string {
   const num = typeof amount === 'number' ? amount : Number(amount.toString())
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'INR',
+    currency: currency,
     maximumFractionDigits: 2,
   }).format(num)
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 import { Role } from '@prisma/client'
@@ -10,7 +10,7 @@ export type ApiContext = {
 }
 
 export type ApiHandlerFn<T = unknown> = (
-  req: Request,
+  req: NextRequest | Request | any,
   session: SessionPayload | null,
   context?: ApiContext
 ) => Promise<T>
@@ -19,7 +19,7 @@ export function apiHandler<T>(
   allowedRoles: Role[] | null,
   fn: ApiHandlerFn<T>
 ) {
-  return async (req: Request, context?: ApiContext): Promise<NextResponse> => {
+  return async (req: NextRequest | Request | any, context: any = {}): Promise<NextResponse> => {
     try {
       let session: SessionPayload | null = null
 

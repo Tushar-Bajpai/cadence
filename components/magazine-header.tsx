@@ -59,6 +59,12 @@ export function MagazineHeader({ onNavigate }: MagazineHeaderProps) {
 
         <div className="hidden items-center gap-3 sm:flex">
           <Link
+            href="/admin"
+            className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold tracking-[0.12em] uppercase backdrop-blur-md transition hover:bg-white/15 text-white"
+          >
+            Admin Studio
+          </Link>
+          <Link
             href="/auth"
             className="rounded-full border border-[#8978ff]/30 bg-[#8978ff]/15 px-4 py-2 text-xs font-semibold tracking-[0.12em] uppercase backdrop-blur-md transition hover:bg-[#8978ff]/30 hover:border-[#8978ff]/60 text-white shadow-[0_0_15px_rgba(137,120,255,0.2)]"
           >
@@ -90,6 +96,13 @@ export function MagazineHeader({ onNavigate }: MagazineHeaderProps) {
             </button>
           </nav>
           <div className="mt-2 flex flex-col gap-2.5">
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-xs font-semibold tracking-[0.12em] uppercase text-white transition hover:bg-white/10"
+            >
+              Admin Studio
+            </Link>
             <Link
               href="/auth"
               onClick={() => setOpen(false)}

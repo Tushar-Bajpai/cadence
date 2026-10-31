@@ -9,6 +9,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  Zap,
 } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { CadenceLogo } from '@/components/cadence-logo'
@@ -161,20 +162,53 @@ export default function AuthPage() {
             </div>
           ) : (
             <>
-              {/* Social Login */}
-              <button
-                type="button"
-                onClick={() => handleOAuth('Google')}
-                disabled={loadingProvider !== null}
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/12 bg-white/5 py-2.5 px-4 text-xs font-medium text-white transition hover:bg-white/10 hover:border-white/25 cursor-pointer disabled:opacity-50"
-              >
-                {loadingProvider === 'Google' ? (
-                  <Loader2 className="size-4 animate-spin text-white/60" />
-                ) : (
-                  <FcGoogle className="size-4 shrink-0" />
-                )}
-                <span>Continue with Google</span>
-              </button>
+              {/* Social Login & Demo Admin Shortcut */}
+              <div className="flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleOAuth('Google')}
+                  disabled={loadingProvider !== null}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/5 py-2.5 px-3 text-xs font-medium text-white transition hover:bg-white/10 hover:border-white/25 cursor-pointer disabled:opacity-50"
+                >
+                  {loadingProvider === 'Google' ? (
+                    <Loader2 className="size-4 animate-spin text-white/60" />
+                  ) : (
+                    <FcGoogle className="size-4 shrink-0" />
+                  )}
+                  <span>Google</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setEmail('admin@cadence.dev')
+                    setPassword('Admin@1234')
+                    setLoadingProvider('demo')
+                    try {
+                      const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'admin@cadence.dev', password: 'Admin@1234' }),
+                      })
+                      if (res.ok) {
+                        setIsSuccess(true)
+                        setSuccessMsg('Welcome back, Admin')
+                        setTimeout(() => {
+                          router.push('/admin')
+                          router.refresh()
+                        }, 500)
+                      }
+                    } finally {
+                      setLoadingProvider(null)
+                    }
+                  }}
+                  disabled={loadingProvider !== null}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-[#8978ff]/30 bg-[#8978ff]/15 py-2.5 px-3 text-xs font-semibold text-[#a79aff] transition hover:bg-[#8978ff]/25 cursor-pointer disabled:opacity-50"
+                >
+                  <Zap className="size-3.5 fill-[#8978ff] text-[#8978ff]" />
+                  <span>Demo Admin ⚡</span>
+                </button>
+              </div>
 
               {/* Minimal Divider */}
               <div className="relative my-5 text-center">

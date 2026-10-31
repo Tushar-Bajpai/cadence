@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     // Abuse guard: too many wrong guesses for this code
-    if (user.resetOtpAttempts >= OTP_MAX_ATTEMPTS) {
+    if ((user.resetOtpAttempts ?? 0) >= OTP_MAX_ATTEMPTS) {
       return NextResponse.json(
         { error: 'Too many attempts. Request a new code.' },
         { status: 429 }
