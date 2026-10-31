@@ -44,7 +44,6 @@ export function DataSyncListener() {
       if (response.ok && isMutation(input, init) && path.startsWith('/api/') &&
         !EXCLUDED_PREFIXES.some((prefix) => path.startsWith(prefix))) {
         const timestamp = String(Date.now())
-        window.dispatchEvent(new Event(SYNC_EVENT))
         window.localStorage.setItem(SYNC_STORAGE_KEY, timestamp)
         channel?.postMessage(timestamp)
       }

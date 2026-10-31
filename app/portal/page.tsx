@@ -80,17 +80,15 @@ export default function CustomerPortalPage() {
   const fetchPortalData = async () => {
     try {
       setLoading(true)
-      const [sumRes, subsRes, invRes, profRes] = await Promise.all([
+      const [sumRes, subsRes, invRes] = await Promise.all([
         fetch('/api/portal/summary'),
         fetch('/api/portal/subscriptions'),
         fetch('/api/portal/invoices'),
-        fetch('/api/portal/profile'),
       ])
 
       const summary = await sumRes.json()
       const subs = await subsRes.json()
       const invs = await invRes.json()
-      const prof = await profRes.json()
 
       if (summary && !summary.error) {
         setSummaryData(summary)
@@ -100,7 +98,6 @@ export default function CustomerPortalPage() {
       }
       if (Array.isArray(subs)) setSubscriptions(subs)
       if (Array.isArray(invs)) setInvoices(invs)
-      if (prof && !prof.error) setProfileData(prof)
     } catch (err) {
       console.error('Error fetching portal data:', err)
     } finally {
@@ -108,9 +105,25 @@ export default function CustomerPortalPage() {
     }
   }
 
+  const fetchProfileData = async () => {
+    try {
+      const res = await fetch('/api/portal/profile')
+      const data = await res.json()
+      if (res.ok && data && !data.error) setProfileData(data)
+    } catch (err) {
+      console.error('Error fetching profile data:', err)
+    }
+  }
+
   useEffect(() => {
     fetchPortalData()
   }, [])
+
+  useEffect(() => {
+    if (activeTab === 'profile' && !profileData) {
+      fetchProfileData()
+    }
+  }, [activeTab, profileData])
 
   // Open invoice detail modal (matching Image 3 right card)
   const handleOpenInvoiceModal = async (invoiceIdOrSeq: string | number) => {
