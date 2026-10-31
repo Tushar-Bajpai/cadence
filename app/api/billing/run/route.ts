@@ -4,7 +4,8 @@ import { runBillingBatch } from '@/lib/billing-run'
 
 export const dynamic = 'force-dynamic'
 
-export const POST = apiHandler(null, async (req: NextRequest) => {
+// Admin/staff only: executes the invoicing batch.
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   let batchSize = 100
   let targetDate = new Date()
 

@@ -403,10 +403,8 @@ export default function AdminDashboardPage() {
         invoice={selectedInvoice}
         isOpen={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
-        onRefresh={() => {
-          fetchDashboardData()
-          if (selectedInvoice) handleOpenInvoiceModal(selectedInvoice.id)
-        }}
+        onInvoiceUpdate={setSelectedInvoice}
+        onRefresh={fetchDashboardData}
       />
 
       {/* Invoicing Run Modal */}

@@ -1,14 +1,18 @@
 import { NextRequest } from 'next/server'
 import { apiHandler, ApiContext } from '@/lib/api'
 import { db } from '@/lib/db'
-import { formatInvoiceNumber, formatCurrency, formatDate } from '@/lib/format'
+import { InvoiceStatus } from '@prisma/client'
+import { formatInvoiceNumber, formatCurrency, formatDate, formatDateTime } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
+export const GET = apiHandler(null, async (
+  req: NextRequest,
+  session,
+  context?: ApiContext
+) => {
   const params = await context?.params
   const idOrSeq = params?.id as string
-
   if (!idOrSeq) throw new Error('Invoice ID is required')
 
   // Support lookup by cuid id or sequence number
@@ -17,49 +21,55 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
   const invoice = await db.invoice.findFirst({
     where: isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq },
     include: {
-      customer: {
-        include: {
-          user: true,
-        },
-      },
-      subscription: {
-        include: {
-          plan: true,
-        },
-      },
+      customer: { include: { user: true } },
+      subscription: { include: { plan: true } },
       lines: true,
       discountLines: true,
-      payments: {
-        orderBy: { date: 'desc' },
-      },
+      payments: { orderBy: { date: 'desc' } },
     },
   })
 
-  if (!invoice) {
-    throw new Error('Invoice not found')
-  }
+  if (!invoice) throw new Error('Invoice not found')
 
+  const now = new Date()
+  const outstanding = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))
+  const isOverdue =
+    invoice.status === InvoiceStatus.CONFIRMED &&
+    new Date(invoice.dueDate) < now &&
+    outstanding > 0
   const latestPayment = invoice.payments[0]
-  const paidAt = latestPayment ? formatDate(latestPayment.date) : null
+  const paidAt = latestPayment ? formatDateTime(latestPayment.date) : null
+
+  // What the customer is allowed to do next (drives the action buttons in the UI)
+  const canConfirm = invoice.status === InvoiceStatus.DRAFT
+  const canCancel = invoice.status === InvoiceStatus.DRAFT || invoice.status === InvoiceStatus.CONFIRMED
+  const canPay = invoice.status === InvoiceStatus.CONFIRMED && outstanding > 0
+  const canSend = invoice.status === InvoiceStatus.DRAFT || invoice.status === InvoiceStatus.CONFIRMED
 
   return {
     id: invoice.id,
     seq: invoice.seq,
     number: formatInvoiceNumber(invoice.seq),
-    title: `Invoice #${invoice.seq === 1 ? 1019 : invoice.seq}`, // Matching #1019 in screenshot!
+    title: `Invoice #${formatInvoiceNumber(invoice.seq)}`,
     status: invoice.status,
-    isPaid: invoice.status === 'PAID',
+    isPaid: invoice.status === InvoiceStatus.PAID,
     paidBannerText:
-      invoice.status === 'PAID'
-        ? `Invoice Paid on ${paidAt || 'August 15, 2023'}`
-        : invoice.status === 'CONFIRMED' && new Date(invoice.dueDate) < new Date()
+      invoice.status === InvoiceStatus.PAID
+        ? `Invoice Paid${paidAt ? ` on ${paidAt}` : ''}`
+        : isOverdue
         ? 'Invoice Overdue — Payment Action Required'
+        : invoice.status === InvoiceStatus.DRAFT
+        ? 'Draft — confirm before it can be paid'
+        : invoice.status === InvoiceStatus.CANCELLED
+        ? 'Invoice Cancelled'
         : 'Payment Pending',
     issuedOn: formatDate(invoice.issueDate),
     dueOn: formatDate(invoice.dueDate),
+    period: `${formatDate(invoice.periodStart)} – ${formatDate(invoice.periodEnd)}`,
+    sentAt: invoice.sentAt ? formatDateTime(invoice.sentAt) : null,
     from: {
-      name: 'SaaS Patterns',
-      address: '2972 Westheimer Rd. Santa Ana, Illinois 85486',
+      name: 'Cadence Billing',
+      address: 'CodeLifters · 2118 Thornridge Cir. Syracuse, Connecticut 35624',
       email: 'billing@codelifters.dev',
       phone: '+1 (800) 555-CADENCE',
     },
@@ -67,20 +77,28 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
       name: invoice.customer.user.name,
       email: invoice.customer.user.email,
       company: invoice.customer.companyName || 'Independent Subscriber',
-      phone: invoice.customer.phone || '(704) 555-0127',
-      address:
-        invoice.customer.address ||
-        '2118 Thornridge Cir. Syracuse, Connecticut 35624',
+      phone: invoice.customer.phone || '—',
+      address: invoice.customer.address || '—',
     },
-    planName: `${invoice.subscription.plan.name} - ${formatCurrency(invoice.subscription.plan.price)}`,
+    subscriptionNumber: `SUB-${String(invoice.subscription.seq).padStart(6, '0')}`,
+    planName: invoice.subscription.plan.name,
+    billingPeriod: invoice.subscription.plan.billingPeriod,
     items: invoice.lines.map((line) => ({
       id: line.id,
       description: line.description,
       unitPrice: Number(line.unitPrice),
       formattedUnitPrice: formatCurrency(line.unitPrice),
       quantity: line.quantity,
+      taxAmount: Number(line.taxAmount),
+      formattedTaxAmount: formatCurrency(line.taxAmount),
       amount: Number(line.amount),
       formattedAmount: formatCurrency(line.amount),
+    })),
+    discounts: invoice.discountLines.map((d) => ({
+      id: d.id,
+      label: d.label,
+      amount: Number(d.amount),
+      formattedAmount: formatCurrency(d.amount),
     })),
     subtotal: Number(invoice.subtotal),
     formattedSubtotal: formatCurrency(invoice.subtotal),
@@ -92,10 +110,15 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
     formattedTotal: formatCurrency(invoice.total),
     amountPaid: Number(invoice.amountPaid),
     formattedAmountPaid: formatCurrency(invoice.amountPaid),
-    balanceDue: Math.max(0, Number(invoice.total) - Number(invoice.amountPaid)),
-    formattedBalanceDue: formatCurrency(
-      Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))
-    ),
+    balanceDue: outstanding,
+    formattedBalanceDue: formatCurrency(outstanding),
+    actions: {
+      canConfirm,
+      canCancel,
+      canPay,
+      canSend,
+      canPrint: true,
+    },
     payments: invoice.payments.map((p) => ({
       id: p.id,
       amount: Number(p.amount),
@@ -106,4 +129,3 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
     })),
   }
 })
-
