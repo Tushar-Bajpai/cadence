@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Layers,
   Search,
@@ -15,13 +17,17 @@ import {
   ArrowRight,
   Shield,
   Clock,
+  ExternalLink,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/format'
 
 export default function SubscriptionsPage() {
+  const router = useRouter()
   const [subscriptions, setSubscriptions] = useState<any[]>([])
   const [plans, setPlans] = useState<any[]>([])
   const [customers, setCustomers] = useState<any[]>([])
+  const [templates, setTemplates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<string>('ALL')
   const [search, setSearch] = useState('')
@@ -29,10 +35,15 @@ export default function SubscriptionsPage() {
   const [actionMessage, setActionMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  // Creation mode: 'scratch' | 'template'
+  const [creationMode, setCreationMode] = useState<'scratch' | 'template'>('template')
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+
   // New subscription form state
   const [newCustId, setNewCustId] = useState('')
   const [newPlanId, setNewPlanId] = useState('')
   const [newSubStatus, setNewSubStatus] = useState('DRAFT')
+  const [quantity, setQuantity] = useState(1)
 
   const fetchSubscriptions = async () => {
     try {
@@ -49,16 +60,22 @@ export default function SubscriptionsPage() {
 
   const fetchPrerequisites = async () => {
     try {
-      const [plansRes, custRes] = await Promise.all([
+      const [plansRes, custRes, tmplRes] = await Promise.all([
         fetch('/api/plans'),
         fetch('/api/customers'),
+        fetch('/api/templates'),
       ])
       const p = await plansRes.json()
       const c = await custRes.json()
+      const t = await tmplRes.json()
+
       setPlans(p)
       setCustomers(c)
+      setTemplates(t)
+
       if (p.length > 0) setNewPlanId(p[0].id)
       if (c.length > 0) setNewCustId(c[0].id)
+      if (t.length > 0) setSelectedTemplateId(t[0].id)
     } catch (err) {
       console.error(err)
     }
@@ -76,7 +93,7 @@ export default function SubscriptionsPage() {
       const res = await fetch(`/api/subscriptions/${id}/transition`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetStatus, action }),
+        body: JSON.stringify({ to: targetStatus, targetStatus, action }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Transition failed')
@@ -92,29 +109,44 @@ export default function SubscriptionsPage() {
     try {
       setActionMessage(null)
       setErrorMessage(null)
-      const selectedPlan = plans.find((p) => p.id === newPlanId)
+
+      let payload: any = { customerId: newCustId }
+
+      if (creationMode === 'template') {
+        payload.templateId = selectedTemplateId
+      } else {
+        const selectedPlan = plans.find((p) => p.id === newPlanId)
+        const qty = Number(quantity) || selectedPlan?.minQuantity || 1
+
+        payload.planId = newPlanId
+        payload.status = newSubStatus
+        payload.lines = [
+          {
+            productId: selectedPlan?.id,
+            description: selectedPlan?.name,
+            unitPrice: selectedPlan?.price,
+            quantity: qty,
+          },
+        ]
+      }
+
       const res = await fetch('/api/subscriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: newCustId,
-          planId: newPlanId,
-          status: newSubStatus,
-          lines: [
-            {
-              productId: selectedPlan?.id,
-              description: selectedPlan?.name,
-              unitPrice: selectedPlan?.price,
-              quantity: 1,
-            },
-          ],
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create subscription')
+
       setIsNewModalOpen(false)
       setActionMessage(`Subscription created successfully!`)
-      fetchSubscriptions()
+
+      // Redirect directly to the subscription detail page
+      if (data?.subscription?.id) {
+        router.push(`/admin/subscriptions/${data.subscription.id}`)
+      } else {
+        fetchSubscriptions()
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Error creating subscription')
     }
@@ -269,9 +301,16 @@ export default function SubscriptionsPage() {
                 </tr>
               ) : (
                 filteredSubs.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-white/[0.04] transition-colors">
+                  <tr
+                    key={sub.id}
+                    className="hover:bg-white/[0.04] transition-colors group cursor-pointer"
+                    onClick={() => router.push(`/admin/subscriptions/${sub.id}`)}
+                  >
                     <td className="py-4 px-6 font-mono font-bold text-white">
-                      {sub.number}
+                      <div className="flex items-center gap-1.5">
+                        <span>{sub.number}</span>
+                        <ExternalLink className="size-3 text-white/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="font-semibold text-white">{sub.customerName}</div>
@@ -287,8 +326,14 @@ export default function SubscriptionsPage() {
                     <td className="py-4 px-6 text-white/70 font-mono">
                       {sub.nextBillingDate ? formatDate(sub.nextBillingDate) : '—'}
                     </td>
-                    <td className="py-4 px-6 text-right">
+                    <td className="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
+                        <Link
+                          href={`/admin/subscriptions/${sub.id}`}
+                          className="px-2.5 py-1 rounded-full border border-white/15 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 font-medium text-[11px] transition"
+                        >
+                          Details →
+                        </Link>
                         {sub.status === 'DRAFT' && (
                           <button
                             onClick={() => handleTransition(sub.id, 'QUOTATION')}
@@ -358,77 +403,153 @@ export default function SubscriptionsPage() {
         </div>
       </div>
 
-      {/* New Subscription Modal */}
+      {/* New Subscription Modal with Template Support */}
       {isNewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="w-full max-w-md bg-[#0e0c24] text-white rounded-3xl p-6 shadow-2xl border border-white/15 space-y-4">
+          <div className="w-full max-w-lg bg-[#0e0c24] text-white rounded-3xl p-6 shadow-2xl border border-white/15 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="font-bold text-white text-sm">Create New Subscription</h3>
-              <button onClick={() => setIsNewModalOpen(false)}>
-                <X className="w-4 h-4 text-white/50" />
+              <div>
+                <h3 className="font-bold text-white text-base">New Subscription Lifecycle</h3>
+                <p className="text-[11px] text-white/50">
+                  Create from template or compose from scratch
+                </p>
+              </div>
+              <button
+                onClick={() => setIsNewModalOpen(false)}
+                className="text-white/50 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Creation Mode Switcher */}
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setCreationMode('template')}
+                className={`py-2 rounded-lg text-center transition cursor-pointer ${
+                  creationMode === 'template'
+                    ? 'bg-[#8978ff] text-white shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                From Quotation Template
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreationMode('scratch')}
+                className={`py-2 rounded-lg text-center transition cursor-pointer ${
+                  creationMode === 'scratch'
+                    ? 'bg-[#8978ff] text-white shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                From Scratch
               </button>
             </div>
 
             <form onSubmit={handleCreateSubscription} className="space-y-4 text-xs">
               <div>
-                <label className="block text-white/60 font-medium mb-1 font-mono">Customer</label>
+                <label className="block text-white/60 font-medium mb-1 font-mono">
+                  Target Customer
+                </label>
                 <select
                   value={newCustId}
                   onChange={(e) => setNewCustId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none"
+                  className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-[#8978ff]"
                   required
                 >
                   {customers.map((c) => (
                     <option key={c.id} value={c.id} className="bg-[#120e28] text-white">
-                      {c.name} ({c.email})
+                      {c.name} ({c.email}) {c.companyName ? `• ${c.companyName}` : ''}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-white/60 font-medium mb-1 font-mono">Plan</label>
-                <select
-                  value={newPlanId}
-                  onChange={(e) => setNewPlanId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none"
-                  required
-                >
-                  {plans.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-[#120e28] text-white">
-                      {p.name} ({p.formattedPrice} / {p.billingPeriod})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {creationMode === 'template' ? (
+                <div>
+                  <label className="block text-white/60 font-medium mb-1 font-mono">
+                    Select Quotation Template
+                  </label>
+                  <select
+                    value={selectedTemplateId}
+                    onChange={(e) => setSelectedTemplateId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-[#8978ff]"
+                    required
+                  >
+                    {templates.map((t) => (
+                      <option key={t.id} value={t.id} className="bg-[#120e28] text-white">
+                        {t.name} ({t.planName} • {t.validityDays} days validity)
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 text-[10px] text-white/40">
+                    Template copies plan, product lines, and calculates quote validity period automatically.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-white/60 font-medium mb-1 font-mono">Plan</label>
+                    <select
+                      value={newPlanId}
+                      onChange={(e) => setNewPlanId(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-[#8978ff]"
+                      required
+                    >
+                      {plans.map((p) => (
+                        <option key={p.id} value={p.id} className="bg-[#120e28] text-white">
+                          {p.name} ({p.formattedPrice} / {p.billingPeriod})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div>
-                <label className="block text-white/60 font-medium mb-1 font-mono">Initial Status</label>
-                <select
-                  value={newSubStatus}
-                  onChange={(e) => setNewSubStatus(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none"
-                >
-                  <option value="DRAFT" className="bg-[#120e28] text-white">Draft</option>
-                  <option value="QUOTATION" className="bg-[#120e28] text-white">Quotation</option>
-                  <option value="CONFIRMED" className="bg-[#120e28] text-white">Confirmed</option>
-                  <option value="ACTIVE" className="bg-[#120e28] text-white">Active (Immediate Billing Ready)</option>
-                </select>
-              </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-white/60 font-medium mb-1 font-mono">
+                        Quantity
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                        className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-[#8978ff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white/60 font-medium mb-1 font-mono">
+                        Initial Status
+                      </label>
+                      <select
+                        value={newSubStatus}
+                        onChange={(e) => setNewSubStatus(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-[#8978ff]"
+                      >
+                        <option value="DRAFT" className="bg-[#120e28] text-white">Draft</option>
+                        <option value="QUOTATION" className="bg-[#120e28] text-white">Quotation</option>
+                        <option value="CONFIRMED" className="bg-[#120e28] text-white">Confirmed</option>
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => setIsNewModalOpen(false)}
-                  className="px-4 py-2 rounded-full text-white/60 hover:text-white"
+                  className="px-4 py-2 rounded-full text-white/60 hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-full bg-[#8978ff] text-white font-semibold hover:bg-[#9b8cff] shadow-[0_4px_20px_rgba(137,120,255,0.4)]"
+                  className="px-5 py-2.5 rounded-full bg-[#8978ff] text-white font-semibold hover:bg-[#9b8cff] shadow-[0_4px_20px_rgba(137,120,255,0.4)] transition cursor-pointer"
                 >
-                  Create Subscription
+                  Create & Open
                 </button>
               </div>
             </form>
