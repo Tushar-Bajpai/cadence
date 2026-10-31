@@ -210,6 +210,20 @@
   perspective-origin: 50% 50%;
   background: #05051a;
   contain: paint layout;
+  /* Brand landing typeface — geometric rounded sans */
+  font-family: var(--font-brand-outfit), 'Outfit', Arial, Helvetica, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Brand landing typeface — geometric rounded sans.
+   Soften heading tracking: the stylesheet was tuned for Arial; Outfit is
+   already narrow, so the old -0.085em would collapse into unreadable. */
+.magazine-viewport h1,
+.magazine-viewport h2 {
+  letter-spacing: -0.03em;
+}
+.magazine-viewport .hero-title {
+  letter-spacing: -0.04em;
 }
 
 .magazine-page {
@@ -264,9 +278,33 @@
   border-right: 1px solid rgba(255,255,255,0.05);
 }
 
-.closing-section { position: relative; min-height: 100%; overflow: hidden; background: radial-gradient(circle at 80% 10%, #5038d6, transparent 35%), #05051a; }
+/* Reference theme: warm amber glow top-left, violet wash bottom-left,
+   dissolving into near-black navy on the right — like the "ground" footer. */
+.closing-section {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 52% 58% at 6% -6%, rgba(255, 132, 48, 0.75) 0%, rgba(214, 108, 60, 0.35) 38%, transparent 66%),
+    radial-gradient(ellipse 55% 62% at -8% 82%, rgba(140, 78, 222, 0.72) 0%, rgba(88, 52, 160, 0.4) 44%, transparent 70%),
+    radial-gradient(ellipse 70% 55% at 42% 38%, rgba(112, 66, 178, 0.28) 0%, transparent 68%),
+    linear-gradient(112deg, #1c1428 0%, #120e21 45%, #07061a 78%, #05051a 100%);
+}
+.closing-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 40% 30% at 30% 8%, rgba(255, 166, 88, 0.22), transparent 70%);
+}
 .closing-section h2 { position: relative; z-index: 2; font-size: clamp(2.8rem, 7vw, 6.8rem); font-weight: 400; letter-spacing: -.09em; line-height: .84; margin: 16px 0; color: white; }
 .closing-section h2 em { color: #8978ff; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-style: italic; }
+.closing-section footer.border-t,
+.site-footer {
+  border-color: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+}
 .light-link { position: relative; z-index: 2; }
 .round-link { display: inline-flex; align-items: center; gap: 18px; margin-top: 24px; border-bottom: 1px solid rgba(245,241,255,.45); padding: 0 0 10px; color: white; font-size: 12px; letter-spacing: .08em; text-decoration: none; transition: border-color .2s; }
 .round-link svg { transition: transform .25s; }

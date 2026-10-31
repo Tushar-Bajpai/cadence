@@ -1,6 +1,15 @@
 import { Analytics } from '@vercel/analytics/next'
+import { Outfit } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+
+// Brand display font for the landing page (geometric rounded sans,
+// matches the lowercase wordmark style of the reference design).
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-brand-outfit',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Cadence — Subscription Management & Invoicing Engine',
@@ -29,7 +38,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={outfit.variable}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <body className="antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
