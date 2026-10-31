@@ -11,8 +11,21 @@ async function runPhase8Tests() {
   console.log('       CADENCE PHASE 8: CUSTOMER PORTAL TEST')
   console.log('====================================================\n')
 
-  // Setup: Ensure we have two distinct customers (Customer A and Customer B)
+  // 1. Setting up Test Customer A and Customer B...
   console.log('1. Setting up Test Customer A and Customer B...')
+
+  // Warm up DB connection in case serverless Neon is cold
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      await db.$queryRaw`SELECT 1`
+      break
+    } catch (e: any) {
+      if (attempt === 5) throw e
+      console.log(`   Waiting for Neon DB connection (attempt ${attempt}/5)...`)
+      await new Promise((r) => setTimeout(r, 2000))
+    }
+  }
+
   const dummyPasswordHash = await bcrypt.hash('TestPass123!@#', 10)
 
   // 1a. Customer A
