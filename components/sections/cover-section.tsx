@@ -16,7 +16,7 @@ export function CoverSection({ pageStateClass, onNavigate }: CoverSectionProps) 
       className={`magazine-page ${pageStateClass} hero flex flex-col justify-between px-4 py-4 sm:px-8 sm:py-5 lg:px-14`}
     >
       <div className="hero-shade absolute inset-0 pointer-events-none" />
-      <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_30%_20%,rgba(113,86,255,.55),transparent_32%),linear-gradient(180deg,transparent_48%,#080625_100%)] pointer-events-none" />
+      <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_28%_18%,rgba(255,146,70,.32),transparent_34%),radial-gradient(circle_at_8%_88%,rgba(150,84,232,.4),transparent_38%),linear-gradient(180deg,transparent_48%,#070619_100%)] pointer-events-none" />
       <div className="aurora-band" aria-hidden="true" />
 
       {/* Global Masthead Header */}
@@ -28,9 +28,10 @@ export function CoverSection({ pageStateClass, onNavigate }: CoverSectionProps) 
           <p className="eyebrow mb-2.5 text-[10px] tracking-[0.28em] sm:text-xs sm:mb-3 text-[#a79aff]">
             SUBSCRIPTION LIFECYCLE & BILLING ENGINE
           </p>
-          <h1 className="text-3xl font-normal leading-[.88] tracking-[-0.085em] text-balance sm:text-5xl md:text-6xl lg:text-[5.8rem]">
-            Recurring billing.<br />
-            <em>Zero missed cycles.</em>
+          <h1 className="display-stretch">
+            recurring billing.
+            <br />
+            <em>zero missed cycles.</em>
           </h1>
           <p className="mt-3.5 max-w-xl text-xs leading-relaxed text-white/75 sm:mt-5 sm:text-sm md:text-base">
             Cadence is an enterprise recurring billing engine built by <strong>CodeLifters</strong>. Guaranteed idempotent invoice generation, strict subscription state machines, multi-tier tax and discount automation, and sub-2s financial reporting.
