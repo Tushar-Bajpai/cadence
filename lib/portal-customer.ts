@@ -20,11 +20,7 @@ export async function getPortalCustomer(session: SessionPayload | null) {
     if (customer) return customer
   }
 
-  // 3. In dev mode without active cookie, resolve first existing customer from database
-  const existingCustomer = await db.customer.findFirst({
-    include: { user: true },
-    orderBy: { user: { createdAt: 'asc' } },
-  })
-
-  return existingCustomer || null
+  // No customer record for this session — never fall back to an arbitrary
+  // customer. Fail closed: callers turn this into 401/403.
+  return null
 }

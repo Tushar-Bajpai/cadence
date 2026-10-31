@@ -32,23 +32,35 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
       orderBy: { createdAt: 'desc' },
     }))
 
-  // Invoices for billing history
-  const invoices = await db.invoice.findMany({
-    where: { customerId: customer.id },
-    orderBy: { issueDate: 'desc' },
-    take: 10,
-    include: {
-      subscription: { include: { plan: true } },
-    },
-  })
+  // Invoices for billing history — the pager shows the latest 10, but the
+  // money totals are aggregated over ALL invoices.
+  const [invoices, totals] = await Promise.all([
+    db.invoice.findMany({
+      where: { customerId: customer.id },
+      orderBy: { issueDate: 'desc' },
+      take: 10,
+      include: {
+        subscription: { include: { plan: true } },
+      },
+    }),
+    db.invoice.groupBy({
+      by: ['status'],
+      where: { customerId: customer.id },
+      _sum: { total: true, amountPaid: true },
+      _count: { _all: true },
+    }),
+  ])
 
-  const totalOutstanding = invoices
-    .filter((inv) => inv.status === 'CONFIRMED')
-    .reduce((acc, inv) => acc + (Number(inv.total) - Number(inv.amountPaid)), 0)
-
-  const totalPaid = invoices
-    .filter((inv) => inv.status === 'PAID')
-    .reduce((acc, inv) => acc + Number(inv.amountPaid), 0)
+  const paidTotal = totals.find((t) => t.status === 'PAID')
+  const confirmedTotal = totals.find((t) => t.status === 'CONFIRMED')
+  const totalOutstanding =
+    confirmedTotal != null
+      ? Math.max(
+          0,
+          Number(confirmedTotal._sum.total ?? 0) - Number(confirmedTotal._sum.amountPaid ?? 0)
+        )
+      : 0
+  const totalPaid = Number(paidTotal?._sum.amountPaid ?? 0)
 
   // Map real billing history from database
   const billingHistory = invoices.map((inv) => {
@@ -70,7 +82,7 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
       formattedAmount: formatCurrency(inv.total),
       status: statusLabel,
       action: isPaid ? 'Download Invoice' : isCancelled ? 'No Action Available' : 'Pay Now',
-      canPay: inv.status === 'CONFIRMED' || inv.status === 'DRAFT',
+      canPay: inv.status === 'CONFIRMED',
     }
   })
 

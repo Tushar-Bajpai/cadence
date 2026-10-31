@@ -9,6 +9,19 @@ export type ApiContext = {
   params?: Promise<Record<string, string | string[]>>
 }
 
+/**
+ * Thrown for user/business errors that must map to a specific HTTP status
+ * (400 validation, 404 not-found, 409 conflict...). Anything else bubbling
+ * out of a handler is treated as an internal server error (500).
+ */
+export class ApiError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
 export type ApiHandlerFn<T = unknown> = (
   req: NextRequest | Request | any,
   session: SessionPayload | null,
@@ -42,6 +55,9 @@ export function apiHandler<T>(
       if (error instanceof ForbiddenError) {
         return NextResponse.json({ error: error.message }, { status: 403 })
       }
+      if (error instanceof ApiError) {
+        return NextResponse.json({ error: error.message }, { status: error.status })
+      }
       if (error instanceof ZodError) {
         const message = error.issues.map((e) => e.message).join(', ')
         return NextResponse.json({ error: message, details: error.flatten() }, { status: 400 })
@@ -58,6 +74,12 @@ export function apiHandler<T>(
         }
         if (error.code === 'P2025') {
           return NextResponse.json({ error: 'Record not found' }, { status: 404 })
+        }
+        if (error.code === 'P2034') {
+          return NextResponse.json(
+            { error: 'Transaction conflict, please retry.' },
+            { status: 409 }
+          )
         }
       }
 

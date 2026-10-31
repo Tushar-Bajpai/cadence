@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { InvoiceStatus } from '@prisma/client'
 import {
@@ -20,30 +20,41 @@ export const POST = apiHandler(['ADMIN', 'STAFF'], async (
   const idOrSeq = params?.id as string
   if (!idOrSeq) throw new Error('Invoice ID is required')
 
-  const body = await req.json()
+  const body = await req.json().catch(() => ({}))
   const to = body?.to as InvoiceStatus
   if (!to || !Object.values(InvoiceStatus).includes(to)) {
-    throw new Error('A valid target status ("to") is required')
+    throw new ApiError(400, 'A valid target status ("to") is required')
   }
 
   const isNumeric = /^\d+$/.test(idOrSeq)
   const invoice = await db.invoice.findFirst({
     where: isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq },
   })
-  if (!invoice) throw new Error('Invoice not found')
+  if (!invoice) throw new ApiError(404, 'Invoice not found')
 
   if (!isValidInvoiceTransition(invoice.status, to)) {
-    throw new Error(invoiceTransitionError(invoice.status))
+    throw new ApiError(400, invoiceTransitionError(invoice.status))
   }
 
-  const updated = await db.invoice.update({
-    where: { id: invoice.id },
+  // Conditional update: only transition if the status is still what we read.
+  // This prevents a race where a concurrent payment (setting PAID) or another
+  // transition silently gets overwritten (last write wins).
+  const updated = await db.invoice.updateMany({
+    where: { id: invoice.id, status: invoice.status },
     data: { status: to },
   })
+  if (updated.count === 0) {
+    throw new ApiError(
+      409,
+      'Invoice status changed concurrently. Re-check its current state and retry.'
+    )
+  }
+
+  const fresh = await db.invoice.findUnique({ where: { id: invoice.id } })
 
   return {
     success: true,
-    message: `Invoice ${updated.seq} moved to ${to}`,
-    invoice: { id: updated.id, seq: updated.seq, status: updated.status },
+    message: `Invoice ${fresh!.seq} moved to ${to}`,
+    invoice: { id: fresh!.id, seq: fresh!.seq, status: fresh!.status },
   }
 })

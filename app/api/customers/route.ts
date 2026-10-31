@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server'
-import { apiHandler } from '@/lib/api'
+import { apiHandler, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { getCustomerActivity } from '@/lib/customer-activity'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (req: NextRequest) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
 
@@ -20,7 +20,7 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
       },
     })
 
-    if (!customer) throw new Error('Customer not found')
+    if (!customer) throw new ApiError(404, 'Customer not found')
 
     // Real dynamic activity timeline from database
     const activityTimeline = await getCustomerActivity(customer.id, customer.user.name)
