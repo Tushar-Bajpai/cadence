@@ -53,17 +53,10 @@ export const GET = apiHandler([Role.ADMIN, Role.STAFF], async (req: NextRequest)
     db.$queryRaw<{ billingPeriod: string; totalAmount: any }[]>`
       SELECT
         p."billingPeriod",
-        COALESCE(
-          SUM(COALESCE(lines_sum."totalAmount", p."price")),
-          0
-        ) as "totalAmount"
+        COALESCE(SUM(COALESCE(l."amount", p."price")), 0) as "totalAmount"
       FROM "Subscription" s
       JOIN "Plan" p ON s."planId" = p."id"
-      LEFT JOIN (
-        SELECT "subscriptionId", SUM("amount") as "totalAmount"
-        FROM "SubscriptionLine"
-        GROUP BY "subscriptionId"
-      ) lines_sum ON lines_sum."subscriptionId" = s."id"
+      LEFT JOIN "SubscriptionLine" l ON l."subscriptionId" = s."id"
       WHERE s."status" = 'ACTIVE'
         ${subStatusFilter && subStatusFilter !== SubStatus.ACTIVE ? Prisma.sql`AND 1=0` : Prisma.empty}
         ${customerId ? Prisma.sql`AND s."customerId" = ${customerId}` : Prisma.empty}
