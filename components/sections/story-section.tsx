@@ -50,7 +50,7 @@ export function StorySection({ pageStateClass, onNavigate }: StorySectionProps) 
             PIPELINE
           </p>
           <div className="order-2 lg:col-span-6 lg:col-start-6 xl:col-span-5 xl:col-start-7">
-            <p className="spread-lead max-w-xl">
+            <p className="spread-lead max-w-xl text-justify hyphens-auto">
               At the heart of Cadence is an atomic invoicing engine designed to
               eliminate billing leakage. Powered by PostgreSQL transactions,
               catch-up loops for missed periods, dynamic line-item taxes, and

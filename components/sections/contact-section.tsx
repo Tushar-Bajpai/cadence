@@ -142,7 +142,7 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
                 Cadence
               </span>
             </div>
-            <p className="max-w-[280px] text-[11px] leading-relaxed text-white/55 sm:text-sm">
+            <p className="max-w-[280px] text-justify hyphens-auto text-[11px] leading-relaxed text-white/55 sm:text-sm">
               Join teams already running recurring billing on Cadence — every
               cycle invoiced. Zero missed. Never twice.
             </p>

@@ -93,7 +93,7 @@ export function FieldNotesSection({ pageStateClass, onNavigate }: FieldNotesSect
                 </h3>
               </div>
 
-              <p className="col-span-2 max-w-lg text-xs leading-relaxed text-white/55 sm:text-sm sm:text-white/60 lg:col-span-4 lg:col-start-9 lg:text-base lg:leading-snug lg:text-right lg:text-white/70">
+              <p className="col-span-2 max-w-lg text-justify hyphens-auto text-xs leading-relaxed text-white/55 sm:text-sm sm:text-white/60 lg:col-span-4 lg:col-start-9 lg:text-base lg:leading-snug lg:text-justify lg:text-white/70">
                 {card.description}
               </p>
             </article>

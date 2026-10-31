@@ -33,7 +33,7 @@ export function CoverSection({ pageStateClass, onNavigate }: CoverSectionProps) 
             <br />
             <em>zero missed cycles.</em>
           </h1>
-          <p className="mt-3.5 max-w-xl text-xs leading-relaxed text-white/75 sm:mt-5 sm:text-sm md:text-base">
+          <p className="mt-3.5 max-w-xl text-justify hyphens-auto text-xs leading-relaxed text-white/75 sm:mt-5 sm:text-sm md:text-base">
             Cadence is an enterprise recurring billing engine built by <strong>CodeLifters</strong>. Guaranteed idempotent invoice generation, strict subscription state machines, multi-tier tax and discount automation, and sub-2s financial reporting.
           </p>
           <div id="hero-actions" className="mt-5 inline-flex flex-wrap items-center gap-3 sm:mt-7 sm:gap-3.5">
