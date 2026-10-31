@@ -13,6 +13,7 @@ interface AuthState {
   isLoading: boolean
   setUser: (user: AuthUser | null) => void
   clearUser: () => void
+  logout: () => Promise<void>
   fetchUser: () => Promise<AuthUser | null>
 }
 
@@ -23,6 +24,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => set({ user, isLoading: false }),
 
   clearUser: () => set({ user: null, isLoading: false }),
+
+  logout: async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch {}
+    if (typeof document !== 'undefined') {
+      document.cookie = 'cadence_session=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    }
+    set({ user: null, isLoading: false })
+    window.location.href = '/auth'
+  },
 
   fetchUser: async () => {
     set({ isLoading: true })

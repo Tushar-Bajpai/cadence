@@ -4,21 +4,22 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  IconSmartHome,
-  IconUsers,
-  IconShoppingBag,
-  IconReceipt2,
-  IconBox,
-  IconTag,
-  IconFileText,
-  IconSearch,
-  IconSettings,
-  IconBolt,
-  IconExternalLink,
-  IconUser,
-  IconShieldLock,
-} from '@tabler/icons-react'
+  Home,
+  Users,
+  ShoppingBag,
+  ScrollText,
+  Box,
+  Tag,
+  FileText,
+  Search,
+  Settings,
+  Zap,
+  ExternalLink,
+  User,
+  LogOut,
+} from 'lucide-react'
 import { useAdminStore } from '@/stores/use-admin-store'
+import { useAuthStore } from '@/stores/use-auth-store'
 
 interface TopNavbarProps {
   onRunBillingClick?: () => void
@@ -37,42 +38,42 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   const setSearchQuery = store.setSearchQuery
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
-  // 5 navigation icon tabs matching reference screenshot:
+  // 7 navigation icon tabs matching reference screenshot:
   const navItems = [
     {
       name: 'Dashboard',
       href: '/admin',
-      icon: IconSmartHome,
+      icon: Home,
     },
     {
       name: 'Customers',
       href: '/admin/customers',
-      icon: IconUsers,
+      icon: Users,
     },
     {
       name: 'Invoices',
       href: '/admin/invoices',
-      icon: IconShoppingBag,
+      icon: ShoppingBag,
     },
     {
       name: 'Subscriptions',
       href: '/admin/subscriptions',
-      icon: IconReceipt2,
+      icon: ScrollText,
     },
     {
       name: 'Products & Plans',
       href: '/admin/products',
-      icon: IconBox,
+      icon: Box,
     },
     {
       name: 'Taxes & Discounts',
       href: '/admin/discounts',
-      icon: IconTag,
+      icon: Tag,
     },
     {
       name: 'Quotation Templates',
       href: '/admin/templates',
-      icon: IconFileText,
+      icon: FileText,
     },
   ]
 
@@ -90,7 +91,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   return (
     <header className="sticky top-0 z-40 w-full bg-[#08061d]/90 backdrop-blur-xl border-b border-white/10 px-5 py-3 select-none">
       <div className="w-full flex items-center justify-between gap-4">
-        {/* Left Section: 4-Dots Logo + Cadence Title + 5 Icon Tabs */}
+        {/* Left Section: 4-Dots Logo + Cadence Title + 7 Icon Tabs */}
         <div className="flex items-center gap-6 sm:gap-7 shrink-0">
           {/* Exact 4-dots brand logo matching reference image */}
           <Link href="/admin" className="flex items-center gap-2.5 group">
@@ -110,7 +111,7 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             </span>
           </Link>
 
-          {/* Sequence of square rounded icon tabs from reference image */}
+          {/* Sequence of square rounded icon tabs matching reference image */}
           <nav className="flex items-center gap-2">
             {navItems.map((item) => {
               const active = isActive(item.href)
@@ -120,13 +121,13 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   key={item.href}
                   href={item.href}
                   title={item.name}
-                  className={`group relative w-10 h-10 rounded-[11px] flex items-center justify-center transition-all ${
+                  className={`group relative w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
                     active
                       ? 'bg-[#8978ff] text-white shadow-[0_0_20px_rgba(137,120,255,0.4)] ring-1 ring-[#8978ff]'
                       : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/10'
                   }`}
                 >
-                  <Icon size={19} stroke={1.8} className="transition-transform group-hover:scale-105" />
+                  <Icon className="w-[18px] h-[18px] transition-transform group-hover:scale-105" strokeWidth={1.8} />
 
                   {/* Tooltip on hover */}
                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#120e28] text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl border border-white/15 z-50">
@@ -138,111 +139,114 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
           </nav>
         </div>
 
-        {/* Right Section: Search Bar + Run Billing + Settings + Avatar */}
-        <div className="flex items-center gap-2 flex-1 max-w-lg justify-end">
-          {/* Search bar matching screenshot */}
+        {/* Right Section: Search Bar + Run Billing + Settings + Avatar (Matching Image 1) */}
+        <div className="flex items-center gap-3 flex-1 max-w-lg justify-end">
+          {/* Search bar */}
           <form
             onSubmit={handleSearchSubmit}
             className="relative flex-1 max-w-xs hidden sm:block"
           >
-            <IconSearch size={15} stroke={1.8} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" strokeWidth={1.8} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search here ..."
-              className="w-full h-9 pl-8 pr-3 text-xs rounded-xl bg-white/[0.04] text-white placeholder-white/35 border border-white/10 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition-all"
+              className="w-full h-10 pl-9 pr-3 text-xs rounded-xl bg-white/[0.04] text-white placeholder-white/35 border border-white/10 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition-all"
             />
           </form>
 
-          {/* Quick link to Customer Portal */}
-          <Link
-            href="/portal"
-            className="hidden xl:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white/80 hover:text-white text-xs font-medium transition cursor-pointer"
-            title="Open Customer Billing Portal"
-          >
-            <IconBox size={15} stroke={1.8} className="text-[#8978ff]" />
-            <span>Portal</span>
-          </Link>
-
-          {/* Quick Billing Engine Run Action */}
+          {/* Quick Billing Engine Run Action matching Image 1 */}
           <button
             onClick={handleRunBilling}
             title="Execute Idempotent Billing Cycle"
-            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_2px_14px_rgba(137,120,255,0.35)] transition-all whitespace-nowrap cursor-pointer active:scale-95"
+            className="hidden sm:inline-flex items-center gap-2 h-10 px-5 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs sm:text-sm font-semibold shadow-[0_4px_20px_rgba(137,120,255,0.4)] transition-all whitespace-nowrap cursor-pointer active:scale-95"
           >
-            <IconBolt size={15} stroke={2} className="fill-white text-white" />
+            <Zap className="w-4 h-4 fill-white text-white" />
             <span>Run Billing</span>
+            <span>⚡</span>
           </button>
 
-          {/* Settings Gear icon matching screenshot */}
+          {/* Settings & Account Cluster matching Image 1 */}
           <div className="relative">
             <button
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-              title="Settings & Tools"
-              className="w-9 h-9 rounded-xl bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/10 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+              title="Settings & Account (Click to Open Menu)"
+              className="w-10 h-10 rounded-2xl bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.08] border border-white/10 flex items-center justify-center transition-all cursor-pointer active:scale-95"
             >
-              <IconSettings size={18} stroke={1.8} />
+              <Settings className="w-5 h-5" strokeWidth={1.8} />
             </button>
 
             {showSettingsMenu && (
-              <div className="absolute right-0 mt-2 w-52 bg-[#120e28] rounded-2xl border border-white/15 shadow-2xl p-1.5 z-50 text-xs space-y-1 backdrop-blur-xl animate-in fade-in duration-150">
+              <div className="absolute right-0 mt-2 w-56 bg-[#120e28] rounded-2xl border border-white/15 shadow-2xl p-2 z-50 text-xs space-y-1 backdrop-blur-xl animate-in fade-in duration-150">
+                <div className="px-3 py-2 border-b border-white/10 mb-1">
+                  <p className="font-semibold text-white truncate">Administrator</p>
+                  <p className="text-[10px] text-white/50 font-mono">admin@cadence.dev</p>
+                </div>
+
                 <button
                   onClick={() => {
                     setShowSettingsMenu(false)
                     handleRunBilling()
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer transition-colors"
                 >
-                  <IconBolt size={16} stroke={1.8} className="text-[#8978ff]" />
+                  <Zap className="w-4 h-4 text-[#8978ff]" />
                   <span>Run Invoicing Batch</span>
                 </button>
+
                 <button
                   onClick={() => {
                     setShowSettingsMenu(false)
                     handleCustomerModal()
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer transition-colors"
                 >
-                  <IconUser size={16} stroke={1.8} className="text-[#8978ff]" />
+                  <User className="w-4 h-4 text-[#8978ff]" />
                   <span>Operations Profile</span>
                 </button>
+
                 <Link
                   href="/portal"
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium transition-colors"
                   onClick={() => setShowSettingsMenu(false)}
                 >
-                  <IconBox size={16} stroke={1.8} className="text-[#8978ff]" />
+                  <Box className="w-4 h-4 text-[#8978ff]" />
                   <span>Customer Billing Portal</span>
                 </Link>
+
                 <Link
                   href="/"
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium transition-colors"
                   onClick={() => setShowSettingsMenu(false)}
                 >
-                  <IconExternalLink size={16} stroke={1.8} className="text-white/50" />
+                  <ExternalLink className="w-4 h-4 text-white/50" />
                   <span>Landing Magazine</span>
                 </Link>
-                <Link
-                  href="/auth"
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 text-left font-medium"
-                  onClick={() => setShowSettingsMenu(false)}
+
+                <div className="my-1 border-t border-white/10" />
+
+                <button
+                  onClick={async () => {
+                    setShowSettingsMenu(false)
+                    await useAuthStore.getState().logout()
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-300 hover:text-rose-200 hover:bg-rose-500/10 text-left font-medium cursor-pointer transition-colors"
                 >
-                  <IconUsers size={16} stroke={1.8} className="text-white/50" />
-                  <span>Authentication Portal</span>
-                </Link>
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>Sign Out</span>
+                </button>
               </div>
             )}
           </div>
 
-          {/* User profile avatar */}
+          {/* User profile avatar matching Image 1 (Toggles account menu with Sign Out) */}
           <button
-            onClick={handleCustomerModal}
-            title="Administrator Account"
-            className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#1b1544] via-[#281e64] to-[#3a2c8a] border border-white/20 hover:border-[#8978ff] text-white/90 text-xs font-mono font-bold flex items-center justify-center shadow-inner hover:scale-105 transition-all cursor-pointer relative"
+            onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+            title="Administrator Account (Click for Profile & Sign Out)"
+            className="w-10 h-10 rounded-2xl bg-[#8978ff] hover:bg-[#9b8cff] border border-white/10 text-white font-bold text-sm flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-[0_2px_12px_rgba(137,120,255,0.3)]"
           >
             <span>AD</span>
-            <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#08061d]" />
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Package, Plus, Tag, Check, X, Layers, Clock, ShieldCheck } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 import { useAdminStore } from '@/stores/use-admin-store'
+import { createProductSchema, createPlanSchema } from '@/lib/validators'
 
 export default function ProductsPage() {
   const {
@@ -62,6 +63,18 @@ export default function ProductsPage() {
         ? [{ attribute: variantAttr, value: variantVal, extraPrice: Number(variantExtra) || 0 }]
         : []
 
+      // Client Zod input validation
+      const val = createProductSchema.safeParse({
+        name: prodName,
+        salesPrice,
+        notes,
+        variants,
+      })
+      if (!val.success) {
+        showToast(val.error.issues[0]?.message || 'Please check product inputs', 'error')
+        return
+      }
+
       const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,6 +99,17 @@ export default function ProductsPage() {
   const handleCreatePlan = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      // Client Zod input validation
+      const val = createPlanSchema.safeParse({
+        name: planName,
+        price: planPrice,
+        billingPeriod: planPeriod,
+      })
+      if (!val.success) {
+        showToast(val.error.issues[0]?.message || 'Please check plan inputs', 'error')
+        return
+      }
+
       const res = await fetch('/api/plans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

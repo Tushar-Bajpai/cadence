@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Tag, Plus, X, Trash2, Power, Pencil, Loader2 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { useAdminStore } from '@/stores/use-admin-store'
+import { createTaxSchema } from '@/lib/validators'
 
 interface DiscountRow {
   id: string
@@ -120,6 +121,29 @@ export default function DiscountsPage() {
   const handleCreateDiscount = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    // Instant client-side input validation
+    if (!dName.trim()) {
+      setError('Discount code name is required')
+      showToast('Discount code name is required', 'error')
+      return
+    }
+    if (!Number(dValue) || Number(dValue) <= 0) {
+      setError('A positive discount value is required')
+      showToast('A positive discount value is required', 'error')
+      return
+    }
+    if (dType === 'PERCENTAGE' && Number(dValue) > 100) {
+      setError('A percentage discount cannot exceed 100%')
+      showToast('A percentage discount cannot exceed 100%', 'error')
+      return
+    }
+    if (dScope === 'PRODUCT' && dProducts.length === 0) {
+      setError('Please select at least one product for product-scoped discounts')
+      showToast('Please select at least one product for product-scoped discounts', 'error')
+      return
+    }
+
     try {
       const res = await fetch('/api/discounts', {
         method: 'POST',
@@ -176,6 +200,20 @@ export default function DiscountsPage() {
   const handleSaveTax = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    // Instant client-side Zod input validation
+    const parsed = createTaxSchema.safeParse({
+      name: tName,
+      type: tType,
+      value: tValue,
+    })
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message || 'Please check tax inputs'
+      setError(msg)
+      showToast(msg, 'error')
+      return
+    }
+
     try {
       const res = editingTax
         ? await fetch(`/api/taxes/${editingTax.id}`, {
@@ -192,8 +230,10 @@ export default function DiscountsPage() {
       if (!res.ok) throw new Error(json.error || 'Failed to save tax')
       setModal(null)
       setEditingTax(null)
+      showToast('Tax policy saved successfully', 'success')
       fetchData()
     } catch (err: any) {
+      showToast(err.message || 'Error saving tax', 'error')
       setError(err.message || 'Error saving tax')
     }
   }

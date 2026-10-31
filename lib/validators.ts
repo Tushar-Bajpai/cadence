@@ -188,3 +188,68 @@ export const portalPayInvoiceSchema = z.object({
   cardBrand: z.string().optional(),
   notes: z.string().optional(),
 })
+
+// ==========================================
+// 10. Tax & Quotation Template Schemas
+// ==========================================
+
+export const createTaxSchema = z
+  .object({
+    name: z.string().min(1, 'Tax name is required').trim(),
+    type: z.enum(['PERCENTAGE', 'FIXED']).default('PERCENTAGE'),
+    value: z.coerce.number().min(0, 'A non-negative tax value is required'),
+    isActive: z.boolean().default(true),
+  })
+  .refine(
+    (data) => {
+      if (data.type === 'PERCENTAGE' && data.value > 100) return false
+      return true
+    },
+    {
+      message: 'A percentage tax cannot exceed 100%',
+      path: ['value'],
+    }
+  )
+
+export const updateTaxSchema = z.object({
+  name: z.string().min(1, 'Tax name cannot be empty').trim().optional(),
+  type: z.enum(['PERCENTAGE', 'FIXED']).optional(),
+  value: z.coerce.number().min(0, 'A non-negative tax value is required').optional(),
+  isActive: z.boolean().optional(),
+})
+
+export const templateLineInputSchema = z.object({
+  productId: z.string().min(1, 'Product is required'),
+  variantId: z.string().optional().nullable(),
+  quantity: z.coerce.number().int().min(1).default(1),
+})
+
+export const createTemplateSchema = z.object({
+  name: z.string().min(1, 'Template name is required').trim(),
+  planId: z.string().min(1, 'A plan is required'),
+  validityDays: z.coerce.number().int().min(1).default(30),
+  lines: z.array(templateLineInputSchema).optional().default([]),
+})
+
+export const updateDiscountTargetedSchema = z.object({
+  name: z.string().min(1, 'Discount name cannot be empty').trim().optional(),
+  value: z.coerce.number().positive('A positive discount value is required').optional(),
+  type: z.enum(['PERCENTAGE', 'FIXED']).optional(),
+  minPurchase: z.coerce.number().min(0).optional().nullable(),
+  minQuantity: z.coerce.number().int().min(1).optional().nullable(),
+  usageLimit: z.coerce.number().int().min(1).optional(),
+  isActive: z.boolean().optional(),
+  startDate: z.string().or(z.date()).optional(),
+  endDate: z.string().or(z.date()).optional(),
+  productIds: z.array(z.string()).optional(),
+})
+
+export const paymentCardInputSchema = z.object({
+  cardNumber: z
+    .string()
+    .transform((v) => v.replace(/\s+/g, ''))
+    .pipe(z.string().regex(/^\d{16}$/, 'Card number must be 16 digits')),
+  cardholder: z.string().min(2, 'Cardholder name is required').trim(),
+  validThru: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Expiry must be in MM/YY format'),
+  cvv: z.string().regex(/^\d{3,4}$/, 'CVV must be 3 or 4 digits'),
+})

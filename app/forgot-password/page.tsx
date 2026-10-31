@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Check, Loader2, Mail } from 'lucide-react'
 import { AuthShell } from '@/components/auth-shell'
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import { forgotPasswordSchema } from '@/lib/validators'
 
 // Step 1 of the OTP reset flow: request a one-time code.
 // The API always answers 200 (never leaks whether the email exists).
@@ -25,6 +24,13 @@ function ForgotPasswordForm() {
   const autoSentForRef = useRef<string | null>(null)
 
   const requestOtp = async (targetEmail: string) => {
+    // Instant Zod input validation
+    const parsed = forgotPasswordSchema.safeParse({ email: targetEmail })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message || 'Please enter a valid email address')
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -51,7 +57,7 @@ function ForgotPasswordForm() {
   useEffect(() => {
     if (
       prefilledEmail &&
-      EMAIL_RE.test(prefilledEmail) &&
+      forgotPasswordSchema.safeParse({ email: prefilledEmail }).success &&
       autoSentForRef.current !== prefilledEmail
     ) {
       autoSentForRef.current = prefilledEmail

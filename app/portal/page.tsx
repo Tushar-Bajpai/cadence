@@ -30,7 +30,9 @@ import {
   MapPin,
   Check,
   Building,
+  LogOut,
 } from 'lucide-react'
+import { useAuthStore } from '@/stores/use-auth-store'
 
 export default function CustomerPortalPage() {
   const {
@@ -839,20 +841,33 @@ export default function CustomerPortalPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in duration-200">
             {/* Left Card: Robert Fox Profile matching Image 3 */}
             <div className="lg:col-span-5 rounded-3xl bg-[#0e0c24] border border-white/10 p-6 flex flex-col space-y-6">
-              {/* Profile Header */}
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 flex items-center justify-center text-amber-950 font-bold text-xl shadow-md">
-                  <span>{profileData.name.slice(0, 2).toUpperCase()}</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">{profileData.name}</h3>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="w-2 h-2 rounded-full bg-[#8978ff] inline-block shadow-[0_0_8px_rgba(137,120,255,0.8)]" />
-                    <span className="text-xs font-semibold text-[#a79aff]">
-                      {profileData.role}
-                    </span>
+              {/* Profile Header with Sign Out Button */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 flex items-center justify-center text-amber-950 font-bold text-xl shadow-md">
+                    <span>{profileData.name.slice(0, 2).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{profileData.name}</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="w-2 h-2 rounded-full bg-[#8978ff] inline-block shadow-[0_0_8px_rgba(137,120,255,0.8)]" />
+                      <span className="text-xs font-semibold text-[#a79aff]">
+                        {profileData.role}
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                <button
+                  onClick={async () => {
+                    await useAuthStore.getState().logout()
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer active:scale-95"
+                  title="Sign out of your customer account"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>Sign Out</span>
+                </button>
               </div>
 
               {/* Meta information matching Screenshot 2 */}

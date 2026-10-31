@@ -29,6 +29,16 @@ export async function setSessionCookie(token: string) {
 }
 
 export async function clearSessionCookie() {
-  const cookieStore = await cookies()
-  cookieStore.delete(AUTH_COOKIE_NAME)
+  try {
+    const cookieStore = await cookies()
+    cookieStore.set(AUTH_COOKIE_NAME, '', {
+      path: '/',
+      maxAge: 0,
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
+    cookieStore.delete(AUTH_COOKIE_NAME)
+  } catch {}
 }

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { apiHandler } from '@/lib/api'
 import { db } from '@/lib/db'
+import { createTemplateSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,25 +66,12 @@ export const GET = apiHandler(['ADMIN', 'STAFF'], async () => {
 // Lines snapshot only the product/variant references; pricing is resolved at
 // subscription-creation time via lib/pricing (salesPrice + variant extra).
 export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
-  const body = await req.json()
+  const { name, planId, validityDays, lines: rawLines } = createTemplateSchema.parse(await req.json())
 
-  const name = String(body.name || '').trim()
-  if (!name) throw new Error('Template name is required')
-
-  const planId = body.planId
-  if (typeof planId !== 'string' || !planId) throw new Error('A plan is required')
-
-  const validityDays = Math.floor(Number(body.validityDays))
-  if (!Number.isFinite(validityDays) || validityDays < 1) {
-    throw new Error('Validity days must be a positive number')
-  }
+  if (rawLines.length === 0) throw new Error('At least one product line is required')
 
   const plan = await db.plan.findUnique({ where: { id: planId } })
   if (!plan) throw new Error('Plan not found')
-
-  const rawLines: Array<{ productId?: string; variantId?: string | null; quantity?: number }> =
-    Array.isArray(body.lines) ? body.lines : []
-  if (rawLines.length === 0) throw new Error('At least one product line is required')
 
   // Resolve + validate every referenced product/variant before creating
   const productIds = [...new Set(rawLines.map((l) => String(l.productId ?? '')).filter(Boolean))]

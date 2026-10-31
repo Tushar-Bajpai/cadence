@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Check, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 import { AuthShell } from '@/components/auth-shell'
+import { resetPasswordSchema } from '@/lib/validators'
 
 // Step 2 of the OTP reset flow: verify the 6-digit code and set a new password.
 function ResetPasswordForm() {
@@ -26,6 +27,13 @@ function ResetPasswordForm() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    // Instant client-side Zod input validation
+    const parsed = resetPasswordSchema.safeParse({ email, otp, password })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message || 'Please check your inputs')
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')

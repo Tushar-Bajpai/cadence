@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, X, Trash2, Loader2, FileText, CalendarClock, Package } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
+import { createTemplateSchema } from '@/lib/validators'
 
 interface TemplateRow {
   id: string
@@ -90,6 +91,24 @@ export default function TemplatesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    // Instant client-side Zod input validation
+    const parsed = createTemplateSchema.safeParse({
+      name,
+      planId,
+      validityDays,
+      lines: lines.map((l) => ({
+        productId: l.productId,
+        variantId: l.variantId || null,
+        quantity: l.quantity,
+      })),
+    })
+
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message || 'Please check template inputs')
+      return
+    }
+
     try {
       const res = await fetch('/api/templates', {
         method: 'POST',

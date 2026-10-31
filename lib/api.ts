@@ -61,6 +61,13 @@ export function apiHandler<T>(
         }
       }
 
+      if (error instanceof Prisma.PrismaClientInitializationError) {
+        return NextResponse.json(
+          { error: 'Database is currently warming up or reconnecting. Please retry in a few seconds.' },
+          { status: 503 }
+        )
+      }
+
       const err = error as Error
       console.error('[API Error]:', err)
       return NextResponse.json(
