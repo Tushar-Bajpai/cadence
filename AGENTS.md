@@ -109,6 +109,15 @@ The application presents an editorial showcase and portal for the Cadence automa
 3. **Preserve `AGENTS.md` Header**:
    Always keep the `<!-- BEGIN:nextjs-agent-rules -->` block intact at the top of this file, as it is managed by Next.js.
 
+4. **Prisma & Database Workflow (Always Update Prisma as We Build)**:
+   - Database: PostgreSQL (`cadence` on `localhost:5432`).
+   - Whenever any model, relation, or schema field is created or modified, immediately run:
+     ```bash
+     npx prisma db push
+     npx prisma generate
+     ```
+   - Always verify database schema sync and TypeScript compilation (`npx tsc --noEmit`) before continuing.
+
 ---
 
 ## 7. Problem Statement Integration & Hackathon Alignment
