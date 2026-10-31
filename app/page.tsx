@@ -16,6 +16,12 @@ export default function Page() {
 
   return (
     <main className="magazine-viewport text-white select-none">
+      {/* Ambient Gradient Theme Backdrop from reference Image 2 */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 opacity-45 mix-blend-screen bg-cover bg-center"
+        style={{ backgroundImage: `url('/images/gradient-theme.jpg')` }}
+        aria-hidden="true"
+      />
       <div className="noise-overlay" aria-hidden="true" />
       <div className="magazine-spine" aria-hidden="true" />
 

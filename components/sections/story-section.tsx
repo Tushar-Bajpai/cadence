@@ -12,7 +12,7 @@ export function StorySection({ pageStateClass, onNavigate }: StorySectionProps) 
   return (
     <section
       id="story"
-      className={`magazine-page ${pageStateClass} bg-[#080628] flex flex-col justify-between px-4 py-4 sm:px-8 sm:py-5 lg:px-14`}
+      className={`magazine-page ${pageStateClass} flex flex-col justify-between px-4 py-4 sm:px-8 sm:py-5 lg:px-14`}
     >
       {/* Top Page Header */}
       <div className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between border-b border-white/10 pb-3 sm:pb-4 text-[11px] sm:text-sm font-bold tracking-[0.22em] text-[#a096b7] uppercase">

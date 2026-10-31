@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 // with a total count for the pager. Filters: status (incl. OVERDUE pseudo
 // status), customer, date range, search.
 
-export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session) => {
 
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
@@ -37,11 +37,11 @@ export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
     }
   }
 
-  if (customerId && session.role !== Role.CUSTOMER) {
+  if (customerId && session?.role !== Role.CUSTOMER) {
     where.customerId = customerId
-  } else if (session.role === Role.CUSTOMER) {
+  } else if (session?.role === Role.CUSTOMER) {
     // Customers can never enumerate other customers' invoices.
-    where.customerId = session.customerId
+    where.customerId = session?.customerId
   }
 
   if (from || to) {

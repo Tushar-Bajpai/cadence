@@ -127,13 +127,21 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
         </div>
       </div>
 
-      {/* Bottom Colophon Footer — Ironclad-style brand + link sections + aurora waves */}
-      <footer className="aurora-footer relative z-20 mx-auto w-full max-w-7xl border-t border-white/12 px-1 pt-6 sm:pt-8">
-        {/* Aurora grain-wave landscape (background) */}
-        <div className="aurora-waves" aria-hidden="true" />
-        <div className="aurora-grain" aria-hidden="true" />
+      {/* Bottom Colophon Footer — Ironclad-style brand + link sections + dunes landscape */}
+      <footer className="aurora-footer relative z-20 mx-auto w-full max-w-7xl border-t border-white/12 px-2 sm:px-4 pt-6 sm:pt-8 pb-3 overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
+        {/* Extreme bottom background landscape image from reference Image 1 */}
+        <div className="absolute inset-x-0 bottom-0 h-44 sm:h-56 lg:h-64 pointer-events-none z-0 overflow-hidden select-none">
+          <img
+            src="/images/footer-landscape.jpg"
+            alt="Dunes Landscape"
+            className="w-full h-full object-cover object-bottom select-none opacity-85"
+          />
+          {/* Subtle gradient vignette to blend into dark gradient above */}
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#06040e]/30 to-[#06040e]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#06040e] via-transparent to-transparent opacity-75" />
+        </div>
 
-        <div className="grid gap-8 pb-8 sm:pb-10 lg:grid-cols-12 lg:gap-6">
+        <div className="relative z-10 grid gap-8 pb-8 sm:pb-10 lg:grid-cols-12 lg:gap-6">
           {/* Brand column */}
           <div className="flex flex-col items-start gap-3 lg:col-span-4 lg:gap-4">
             <div className="flex items-center gap-2.5">
@@ -293,15 +301,15 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
         </div>
 
         {/* Legal bar */}
-        <div className="flex flex-col items-start gap-2 border-t border-white/12 py-3.5 text-[10px] uppercase tracking-[0.14em] text-white/45 sm:flex-row sm:items-center sm:justify-between sm:text-[11px]">
+        <div className="relative z-10 flex flex-col items-start gap-2 border-t border-white/12 py-3.5 text-[10px] uppercase tracking-[0.14em] text-white/70 sm:flex-row sm:items-center sm:justify-between sm:text-[11px] backdrop-blur-[2px]">
           <span>© 2026 Cadence by CodeLifters. All rights reserved.</span>
           <button
             onClick={() => onNavigate(0)}
-            className="font-mono text-white/50 hover:text-white transition cursor-pointer"
+            className="font-mono text-white/70 hover:text-white transition cursor-pointer"
           >
             ↑ RETURN TO OVERVIEW
           </button>
-          <span className="flex items-center gap-1.5 normal-case">
+          <span className="flex items-center gap-1.5 normal-case text-white/80">
             Made with
             <Heart className="size-3 fill-[#8978ff] text-[#8978ff]" />
             by
@@ -309,7 +317,7 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
               href="https://codelifters.xyz"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline underline-offset-2 text-white/80 hover:text-white"
+              className="underline underline-offset-2 text-white font-medium hover:underline"
             >
               CodeLifters
             </a>
