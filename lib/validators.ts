@@ -25,7 +25,21 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address').trim().toLowerCase(),
 })
 
+export const otpCodeSchema = z
+  .string()
+  .regex(/^\d{6}$/, 'The code must be exactly 6 digits')
+
+// OTP-based reset: the user submits their email, the 6-digit code they
+// received by email, and their new password.
 export const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Reset token is required'),
+  email: z.string().email('Invalid email address').trim().toLowerCase(),
+  otp: otpCodeSchema,
   password: passwordSchema,
+})
+
+// Admin-only staff creation (no customer row is created)
+export const staffCreateSchema = signupSchema.pick({
+  name: true,
+  email: true,
+  password: true,
 })

@@ -18,6 +18,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [showPassword, setShowPassword] = useState(false)
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
 
@@ -28,20 +29,39 @@ export default function AuthPage() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setLoadingProvider('email')
 
-    setTimeout(() => {
-      setLoadingProvider(null)
+    const endpoint = mode === 'signin' ? '/api/auth/login' : '/api/auth/signup'
+    const body = mode === 'signin' ? { email, password } : { name, email, password }
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setError(json.error || 'Something went wrong. Please try again.')
+        setLoadingProvider(null)
+        return
+      }
+
       setIsSuccess(true)
-      setSuccessMsg(
-        mode === 'signin'
-          ? 'Welcome back'
-          : 'Account created'
-      )
+      setSuccessMsg(mode === 'signin' ? 'Welcome back' : 'Account created')
+
+      const role = json?.user?.role as string | undefined
+      const isAdmin = role === 'ADMIN' || role === 'STAFF'
       setTimeout(() => {
-        router.push('/')
-      }, 1200)
-    }, 700)
+        router.push(isAdmin ? '/admin' : '/portal')
+        router.refresh()
+      }, 900)
+    } catch {
+      setError('Network error. Please check your connection and try again.')
+      setLoadingProvider(null)
+    }
   }
 
   const handleOAuth = (provider: string) => {
@@ -204,13 +224,12 @@ export default function AuthPage() {
                       Password
                     </label>
                     {mode === 'signin' && (
-                      <button
-                        type="button"
-                        onClick={() => alert('Reset link sent to demo email.')}
+                      <Link
+                        href="/forgot-password"
                         className="text-[10px] text-white/40 hover:text-white transition cursor-pointer"
                       >
                         Forgot password?
-                      </button>
+                      </Link>
                     )}
                   </div>
                   <div className="relative">
@@ -236,6 +255,13 @@ export default function AuthPage() {
                     </p>
                   )}
                 </div>
+
+                {/* Inline API error */}
+                {error && !isSuccess && (
+                  <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] text-red-300">
+                    {error}
+                  </p>
+                )}
 
                 {/* Primary Submit Button */}
                 <button

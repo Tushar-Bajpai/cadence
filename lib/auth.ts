@@ -1,38 +1,10 @@
-import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
-import { Role } from '@prisma/client'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'cadence-super-secret-jwt-key-2026-codelifters-secure-token'
-const key = new TextEncoder().encode(JWT_SECRET)
+import { signSession, verifySession, SessionPayload } from './session'
 
 export const AUTH_COOKIE_NAME = 'cadence_session'
 
-export interface SessionPayload {
-  userId: string
-  email: string
-  name: string
-  role: Role
-  customerId?: string
-}
-
-export async function signSession(payload: SessionPayload): Promise<string> {
-  return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(key)
-}
-
-export async function verifySession(token: string): Promise<SessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, key, {
-      algorithms: ['HS256'],
-    })
-    return payload as unknown as SessionPayload
-  } catch {
-    return null
-  }
-}
+export type { SessionPayload }
+export { signSession, verifySession }
 
 export async function getSession(): Promise<SessionPayload | null> {
   try {
