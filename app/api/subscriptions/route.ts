@@ -230,7 +230,6 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
       customerId,
       planId: targetPlanId,
       status: initialStatus,
->>>>>>> origin/main
       startDate: start,
       expiryDate: expiry,
       paymentTermDays: Number(paymentTermDays) || 15,
