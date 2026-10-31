@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler } from '@/lib/api'
+import { apiHandler, UnauthorizedError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { formatCurrency, formatDate, formatInvoiceNumber } from '@/lib/format'
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export const GET = apiHandler(null, async (req: NextRequest, session) => {
   const customer = await getPortalCustomer(session)
-  if (!customer) throw new Error('Customer not found')
+  if (!customer) throw new UnauthorizedError('Customer not authenticated')
 
   const invoices = await db.invoice.findMany({
     where: { customerId: customer.id },
@@ -24,7 +24,7 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     id: inv.id,
     seq: inv.seq,
     number: formatInvoiceNumber(inv.seq),
-    title: `Invoice #${inv.seq === 1 ? 1019 : inv.seq}`,
+    title: formatInvoiceNumber(inv.seq),
     status: inv.status,
     isPaid: inv.status === 'PAID',
     issuedOn: formatDate(inv.issueDate),
@@ -41,7 +41,7 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     formattedAmountPaid: formatCurrency(inv.amountPaid),
     balanceDue: Math.max(0, Number(inv.total) - Number(inv.amountPaid)),
     formattedBalanceDue: formatCurrency(Math.max(0, Number(inv.total) - Number(inv.amountPaid))),
-    planName: inv.subscription?.plan?.name || 'Basic Plan',
+    planName: inv.subscription?.plan?.name || 'Standard Plan',
     lines: inv.lines.map((l) => ({
       id: l.id,
       description: l.description,
@@ -54,4 +54,3 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
     latestPaymentDate: inv.payments[0] ? formatDate(inv.payments[0].date) : null,
   }))
 })
-
