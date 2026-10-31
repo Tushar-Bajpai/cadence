@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, NotFoundError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { formatInvoiceNumber, formatCurrency, formatDate } from '@/lib/format'
 
@@ -9,13 +9,21 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
   const params = await context?.params
   const idOrSeq = params?.id as string
 
-  if (!idOrSeq) throw new Error('Invoice ID is required')
+  if (!idOrSeq) throw new NotFoundError('Invoice ID is required')
 
   // Support lookup by cuid id or sequence number
   const isNumeric = /^\d+$/.test(idOrSeq)
 
+  // Defense-in-depth: If the caller is a customer, restrict strictly to their invoices
+  const customerFilter = session?.role === 'CUSTOMER' && session.customerId
+    ? { customerId: session.customerId }
+    : {}
+
   const invoice = await db.invoice.findFirst({
-    where: isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq },
+    where: {
+      ...(isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq }),
+      ...customerFilter,
+    },
     include: {
       customer: {
         include: {
@@ -36,7 +44,7 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
   })
 
   if (!invoice) {
-    throw new Error('Invoice not found')
+    throw new NotFoundError('Invoice not found')
   }
 
   const latestPayment = invoice.payments[0]
@@ -98,10 +106,9 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
       id: p.id,
       amount: Number(p.amount),
       formattedAmount: formatCurrency(p.amount),
-      method: p.method,
       date: formatDate(p.date),
+      method: p.method,
       note: p.note,
     })),
   }
 })
-
