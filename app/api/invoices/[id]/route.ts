@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
-import { InvoiceStatus } from '@prisma/client'
+import { InvoiceStatus, Role } from '@prisma/client'
 import { formatInvoiceNumber, formatCurrency, formatDate, formatDateTime } from '@/lib/format'
+import { getPortalCustomer } from '@/lib/portal-customer'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,15 +12,28 @@ export const GET = apiHandler(null, async (
   session,
   context?: ApiContext
 ) => {
+  if (!session) throw new ApiError(401, 'Authentication required')
+
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new Error('Invoice ID is required')
+  if (!idOrSeq) throw new ApiError(400, 'Invoice ID is required')
 
   // Support lookup by cuid id or sequence number
   const isNumeric = /^\d+$/.test(idOrSeq)
 
+  const where = isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq }
+
+  // Customers may only open their own invoices, even by guessing URLs.
+  if (session.role === Role.CUSTOMER) {
+    const customer = await getPortalCustomer(session)
+    if (!customer) throw new ApiError(403, 'No customer profile linked to this account')
+    Object.assign(where, { customerId: customer.id })
+  } else if (session.role !== Role.ADMIN && session.role !== Role.STAFF) {
+    throw new ApiError(403, 'Insufficient permissions')
+  }
+
   const invoice = await db.invoice.findFirst({
-    where: isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq },
+    where,
     include: {
       customer: { include: { user: true } },
       subscription: { include: { plan: true } },
@@ -29,7 +43,7 @@ export const GET = apiHandler(null, async (
     },
   })
 
-  if (!invoice) throw new Error('Invoice not found')
+  if (!invoice) throw new ApiError(404, 'Invoice not found')
 
   const now = new Date()
   const outstanding = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))

@@ -12,7 +12,7 @@ import { addPeriod } from '@/lib/billing-period'
 
 export const dynamic = 'force-dynamic'
 
-export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
 
@@ -38,8 +38,17 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
   }
 
-  // Handle Pause (only if plan.pausable)
+  // Handle Pause (only if ACTIVE and plan.pausable)
   if (action === 'pause') {
+    if (sub.status !== SubStatus.ACTIVE) {
+      return NextResponse.json(
+        { error: `Only ACTIVE subscriptions can be paused (current: ${sub.status}).` },
+        { status: 400 }
+      )
+    }
+    if (sub.isPaused) {
+      return NextResponse.json({ error: 'Subscription is already paused.' }, { status: 400 })
+    }
     if (!canPauseOrResume(sub.plan)) {
       return NextResponse.json(
         { error: `Plan "${sub.plan.name}" does not allow pausing (pausable=false).` },
@@ -53,8 +62,11 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     return { success: true, message: 'Subscription paused', subscription: updated }
   }
 
-  // Handle Resume (only if plan.pausable)
+  // Handle Resume (only if paused and plan.pausable)
   if (action === 'resume') {
+    if (!sub.isPaused) {
+      return NextResponse.json({ error: 'Subscription is not paused.' }, { status: 400 })
+    }
     if (!canPauseOrResume(sub.plan)) {
       return NextResponse.json(
         { error: `Plan "${sub.plan.name}" does not allow resuming (pausable=false).` },

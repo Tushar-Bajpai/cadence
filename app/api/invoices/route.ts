@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { apiHandler } from '@/lib/api'
+import { apiHandler, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
-import { InvoiceStatus, Prisma } from '@prisma/client'
+import { InvoiceStatus, Prisma, Role } from '@prisma/client'
 import { formatInvoiceNumber, formatCurrency, formatDate } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +9,15 @@ export const dynamic = 'force-dynamic'
 // Invoice list. Every list endpoint is paginated (ground rule)
 // with a total count for the pager. Filters: status (incl. OVERDUE pseudo
 // status), customer, date range, search.
-export const GET = apiHandler(null, async (req: NextRequest) => {
+// Staff/admin see everything; customers are hard-scoped to their own invoices.
+export const GET = apiHandler(null, async (req: NextRequest, session) => {
+  if (!session) throw new ApiError(401, 'Authentication required')
+  if (session.role === Role.CUSTOMER) {
+    if (!session.customerId) throw new ApiError(403, 'No customer profile linked to this account')
+  } else if (session.role !== Role.ADMIN && session.role !== Role.STAFF) {
+    throw new ApiError(403, 'Insufficient permissions')
+  }
+
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
   const search = searchParams.get('search') || ''
@@ -35,8 +43,11 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
     }
   }
 
-  if (customerId) {
+  if (customerId && session.role !== Role.CUSTOMER) {
     where.customerId = customerId
+  } else if (session.role === Role.CUSTOMER) {
+    // Customers can never enumerate other customers' invoices.
+    where.customerId = session.customerId
   }
 
   if (from || to) {

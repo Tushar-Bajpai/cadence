@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler } from '@/lib/api'
+import { apiHandler, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { formatCurrency } from '@/lib/format'
 
@@ -39,20 +39,28 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
   }))
 })
 
-export const POST = apiHandler(null, async (req: NextRequest) => {
+export const POST = apiHandler(['ADMIN'], async (req: NextRequest) => {
   const body = await req.json()
   const { name, type = 'service', salesPrice, costPrice = 0, notes, variants = [] } = body
 
   if (!name || salesPrice === undefined) {
-    throw new Error('Name and salesPrice are required')
+    throw new ApiError(400, 'Name and salesPrice are required')
+  }
+  const salesPriceNum = Number(salesPrice)
+  const costPriceNum = Number(costPrice)
+  if (!Number.isFinite(salesPriceNum) || salesPriceNum < 0) {
+    throw new ApiError(400, 'salesPrice must be a non-negative number')
+  }
+  if (!Number.isFinite(costPriceNum) || costPriceNum < 0) {
+    throw new ApiError(400, 'costPrice must be a non-negative number')
   }
 
   const product = await db.product.create({
     data: {
       name,
       type,
-      salesPrice: Number(salesPrice),
-      costPrice: Number(costPrice),
+      salesPrice: salesPriceNum,
+      costPrice: costPriceNum,
       notes,
       variants: {
         create: variants.map((v: any) => ({

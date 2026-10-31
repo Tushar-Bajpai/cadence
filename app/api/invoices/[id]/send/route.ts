@@ -1,11 +1,19 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { InvoiceStatus } from '@prisma/client'
 import { sendMail } from '@/lib/mailer'
 import { formatInvoiceNumber, formatCurrency, formatDate } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
+
+// Escape user-controlled values interpolated into the HTML email body.
+const esc = (s: string) =>
+  String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 
 // Email the invoice summary to the customer with a portal link, and stamp
 // sentAt (once). Only DRAFT/CONFIRMED invoices can be sent.
@@ -28,38 +36,39 @@ export const POST = apiHandler(['ADMIN', 'STAFF'], async (
       discountLines: true,
     },
   })
-  if (!invoice) throw new Error('Invoice not found')
+  if (!invoice) throw new ApiError(404, 'Invoice not found')
 
   if (invoice.status === InvoiceStatus.PAID) {
-    throw new Error('A paid invoice has no reason to be sent')
+    throw new ApiError(400, 'A paid invoice has no reason to be sent')
   }
   if (invoice.status === InvoiceStatus.CANCELLED) {
-    throw new Error('A cancelled invoice cannot be sent')
+    throw new ApiError(400, 'A cancelled invoice cannot be sent')
   }
 
   const appUrl = process.env.APP_URL || 'http://localhost:8000'
   const portalLink = `${appUrl}/portal/invoices/${invoice.id}`
   const number = formatInvoiceNumber(invoice.seq)
-  const name = invoice.customer.user.name
+  const rawName = invoice.customer.user.name
+  const name = esc(rawName)
   const total = formatCurrency(invoice.total)
   const due = formatDate(invoice.dueDate)
 
   const linesHtml = [
     ...invoice.lines.map(
       (l) =>
-        `<tr><td>${l.description}</td><td align="right">${l.quantity} × ${formatCurrency(
-          l.unitPrice
-        )}</td><td align="right">${formatCurrency(l.amount)}</td></tr>`
+        `<tr><td>${esc(l.description)}</td><td align="right">${l.quantity} × ${esc(
+          formatCurrency(l.unitPrice)
+        )}</td><td align="right">${esc(formatCurrency(l.amount))}</td></tr>`
     ),
     ...invoice.discountLines.map(
       (d) =>
-        `<tr><td style="color:#7c3aed">Discount: ${d.label}</td><td align="right"></td><td align="right" style="color:#7c3aed">−${formatCurrency(
-          d.amount
+        `<tr><td style="color:#7c3aed">Discount: ${esc(d.label)}</td><td align="right"></td><td align="right" style="color:#7c3aed">−${esc(
+          formatCurrency(d.amount)
         )}</td></tr>`
     ),
   ].join('')
 
-  const text = `Hi ${name},
+  const text = `Hi ${rawName},
 
 Invoice ${number} was issued for ${invoice.subscription.plan.name}.
 
@@ -73,7 +82,7 @@ View the invoice: ${portalLink}
   const html = `
 <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px">
   <p>Hi <strong>${name}</strong>,</p>
-  <p>Invoice <strong>${number}</strong> for <strong>${invoice.subscription.plan.name}</strong>.</p>
+  <p>Invoice <strong>${number}</strong> for <strong>${esc(invoice.subscription.plan.name)}</strong>.</p>
   <table style="width:100%;border-collapse:collapse;font-size:14px">
     <tr><td style="padding:4px 0;color:#555">Issue date</td><td align="right">${formatDate(invoice.issueDate)}</td></tr>
     <tr><td style="padding:4px 0;color:#555">Due date</td><td align="right">${due}</td></tr>

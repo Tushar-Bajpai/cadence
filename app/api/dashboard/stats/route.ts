@@ -6,7 +6,7 @@ import { formatCurrency, formatSubNumber, formatInvoiceNumber } from '@/lib/form
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (req: NextRequest) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const now = new Date()
 
   // 1. Fetch aggregate metrics
