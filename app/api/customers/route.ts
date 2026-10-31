@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (req: NextRequest) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
 

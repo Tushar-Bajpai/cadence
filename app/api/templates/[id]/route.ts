@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (_req: NextRequest, _session, context?: ApiContext) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (_req: NextRequest, _session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
   if (!id) throw new Error('Template ID is required')
@@ -56,7 +56,7 @@ export const GET = apiHandler(null, async (_req: NextRequest, _session, context?
 })
 
 // Delete template lines then the template itself
-export const DELETE = apiHandler(null, async (_req: NextRequest, _session, context?: ApiContext) => {
+export const DELETE = apiHandler(['ADMIN', 'STAFF'], async (_req: NextRequest, _session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
   if (!id) throw new Error('Template ID is required')

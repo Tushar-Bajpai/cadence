@@ -1,5 +1,8 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
+import { TopLoadingBar } from '@/components/top-loading-bar'
+import { DbKeepAlive } from '@/components/db-keep-alive'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -31,6 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased">
+        <Suspense fallback={null}>
+          <TopLoadingBar />
+          <DbKeepAlive />
+        </Suspense>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

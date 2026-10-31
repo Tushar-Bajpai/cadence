@@ -4,6 +4,21 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  Box,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  Search,
+  ScrollText,
+  Settings,
+  ShoppingBag,
+  Tag,
+  User,
+  Users,
+  Zap,
+} from 'lucide-react'
+import { useAdminStore } from '@/stores/use-admin-store'
+import {
   IconSmartHome,
   IconUsers,
   IconShoppingBag,
@@ -17,7 +32,6 @@ import {
   IconExternalLink,
   IconUser,
   IconShieldLock,
-  IconCreditCard,
   IconChartBar,
 } from '@tabler/icons-react'
 
@@ -41,9 +55,14 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   // Navigation icon tabs matching reference screenshot:
   const navItems = [
     {
+      name: 'Admin Overview',
+      href: '/admin',
+      icon: IconSmartHome,
+    },
+    {
       name: 'Finance Dashboard',
       href: '/admin/dashboard',
-      icon: IconSmartHome,
+      icon: IconChartBar,
     },
     {
       name: 'Customers',

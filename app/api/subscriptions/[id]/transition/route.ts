@@ -23,7 +23,7 @@ const transitionInputSchema = z
     message: 'Either action, to, or targetStatus is required',
   })
 
-export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
 

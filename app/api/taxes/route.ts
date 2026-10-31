@@ -6,7 +6,7 @@ import { createTaxSchema } from '@/lib/validators'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async () => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async () => {
   const taxes = await db.tax.findMany({
     orderBy: [{ isActive: 'desc' }, { name: 'asc' }],
     include: {

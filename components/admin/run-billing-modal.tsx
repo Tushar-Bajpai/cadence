@@ -95,6 +95,21 @@ export function RunBillingModal({ isOpen, onClose, onSuccess }: RunBillingModalP
                   <div className="text-[10px] text-white/40 uppercase font-semibold">Failed</div>
                 </div>
               </div>
+              {result.errors?.length > 0 && (
+                <div className="space-y-1 border-t border-amber-400/20 pt-3 text-left">
+                  <p className="font-semibold text-amber-300">Needs attention</p>
+                  {result.errors.slice(0, 3).map((message: string) => (
+                    <p key={message} className="text-[11px] leading-relaxed text-white/60">
+                      {message}
+                    </p>
+                  ))}
+                  {result.errors.length > 3 && (
+                    <p className="text-[11px] text-white/40">
+                      +{result.errors.length - 3} more issue(s)
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

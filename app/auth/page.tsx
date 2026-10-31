@@ -16,6 +16,8 @@ import { FcGoogle } from 'react-icons/fc'
 import { CadenceLogo } from '@/components/cadence-logo'
 import { useAuthStore } from '@/stores/use-auth-store'
 import { loginSchema, signupSchema } from '@/lib/validators'
+import { toUserFriendlyError } from '@/lib/friendly-error'
+import { startTopLoading, stopTopLoading } from '@/lib/loading'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -49,6 +51,7 @@ export default function AuthPage() {
     }
 
     try {
+      startTopLoading()
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,7 +60,8 @@ export default function AuthPage() {
       const json = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setError(json.error || 'Something went wrong. Please try again.')
+        stopTopLoading()
+        setError(toUserFriendlyError(json.error || 'Something went wrong. Please try again.'))
         setLoadingProvider(null)
         return
       }
@@ -75,8 +79,9 @@ export default function AuthPage() {
         router.push(isAdmin ? '/admin' : '/portal')
         router.refresh()
       }, 900)
-    } catch {
-      setError('Network error. Please check your connection and try again.')
+    } catch (err: any) {
+      stopTopLoading()
+      setError(toUserFriendlyError(err?.message || 'Network error. Please check your connection and try again.'))
       setLoadingProvider(null)
     }
   }
@@ -202,6 +207,7 @@ export default function AuthPage() {
                     setEmail('admin@cadence.dev')
                     setPassword('Admin@1234')
                     setLoadingProvider('demo-admin')
+                    startTopLoading()
                     try {
                       const res = await fetch('/api/auth/login', {
                         method: 'POST',
@@ -219,10 +225,12 @@ export default function AuthPage() {
                           window.location.href = '/admin'
                         }, 400)
                       } else {
-                        setError(json.error || 'Failed to sign in as Demo Admin')
+                        stopTopLoading()
+                        setError(toUserFriendlyError(json.error || 'Failed to sign in as Demo Admin'))
                       }
                     } catch (err: any) {
-                      setError(err?.message || 'Connection error during demo login')
+                      stopTopLoading()
+                      setError(toUserFriendlyError(err?.message || 'Connection error during demo login'))
                     } finally {
                       setLoadingProvider(null)
                     }
@@ -246,6 +254,7 @@ export default function AuthPage() {
                     setEmail('robert.fox@example.com')
                     setPassword('Admin@1234')
                     setLoadingProvider('demo-customer')
+                    startTopLoading()
                     try {
                       const res = await fetch('/api/auth/login', {
                         method: 'POST',
@@ -263,10 +272,12 @@ export default function AuthPage() {
                           window.location.href = '/portal'
                         }, 400)
                       } else {
-                        setError(json.error || 'Failed to sign in as Demo Customer')
+                        stopTopLoading()
+                        setError(toUserFriendlyError(json.error || 'Failed to sign in as Demo Customer'))
                       }
                     } catch (err: any) {
-                      setError(err?.message || 'Connection error during demo login')
+                      stopTopLoading()
+                      setError(toUserFriendlyError(err?.message || 'Connection error during demo login'))
                     } finally {
                       setLoadingProvider(null)
                     }

@@ -21,6 +21,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { TableSkeleton } from '@/components/ui/skeleton'
 
 export default function SubscriptionsPage() {
   const router = useRouter()
@@ -293,7 +294,9 @@ export default function SubscriptionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
-              {filteredSubs.length === 0 ? (
+              {loading && subscriptions.length === 0 ? (
+                <TableSkeleton columns={6} rows={6} />
+              ) : filteredSubs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-white/40 font-mono">
                     No subscriptions found.

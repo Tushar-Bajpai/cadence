@@ -39,12 +39,24 @@ export async function POST(req: Request) {
   return apiHandler(null, async (req) => {
     const data = loginSchema.parse(await req.json())
 
+    const isDemoAccount = Boolean(DEMO_FALLBACK_USERS[data.email]) && data.password === 'Admin@1234'
     let user: any = null
+
     try {
-      user = await db.user.findUnique({
-        where: { email: data.email },
-        include: { customer: true },
-      })
+      if (isDemoAccount) {
+        // For 1-click demo logins, race with a 2-second timeout so a sleeping Neon DB never freezes the UI
+        const dbLookup = db.user.findUnique({
+          where: { email: data.email },
+          include: { customer: true },
+        })
+        const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
+        user = await Promise.race([dbLookup, timeout])
+      } else {
+        user = await db.user.findUnique({
+          where: { email: data.email },
+          include: { customer: true },
+        })
+      }
     } catch (dbErr) {
       console.warn('[auth/login] Database lookup unavailable, checking demo users:', dbErr)
     }

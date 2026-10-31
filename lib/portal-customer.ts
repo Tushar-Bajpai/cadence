@@ -3,13 +3,14 @@ import { SessionPayload } from './session'
 
 /**
  * Resolves the authenticated customer for portal queries.
- * Defense-in-depth: If a session is provided, it ONLY resolves the customer
- * linked to that specific session (userId or customerId). It NEVER falls back
- * to another customer if a session is present.
+ * Customer sessions are strictly isolated to their own customer record.
+ * Admin and staff sessions may preview the dedicated demo customer.
  */
 export async function getPortalCustomer(session: SessionPayload | null) {
-  // 1. Direct customerId on session
-  if (session?.customerId) {
+  if (!session) return null
+
+  // 1. Direct customerId on session (e.g. Robert Fox or registered customer)
+  if (session.customerId) {
     const customer = await db.customer.findUnique({
       where: { id: session.customerId },
       include: { user: true },
@@ -18,27 +19,36 @@ export async function getPortalCustomer(session: SessionPayload | null) {
   }
 
   // 2. Lookup by session userId
-  if (session?.userId) {
-    const customer = await db.customer.findUnique({
+  if (session.userId) {
+    let customer = await db.customer.findUnique({
       where: { userId: session.userId },
       include: { user: true },
     })
     if (customer) return customer
+
+    // If the logged-in user is a CUSTOMER but does not have a customer record yet,
+    // auto-create a clean, isolated customer record for them:
+    if (session.role === 'CUSTOMER') {
+      customer = await db.customer.create({
+        data: {
+          userId: session.userId,
+          companyName: null,
+        },
+        include: { user: true },
+      })
+      return customer
+    }
   }
 
-  // If a session was explicitly provided but has no matching customer,
-  // NEVER fall back to another customer!
-  if (session) {
-    return null
-  }
-
-  // 3. Fallback only in dev preview when no session is present at all
-  if (process.env.NODE_ENV !== 'production' && !process.env.STRICT_PORTAL_AUTH) {
-    const existingCustomer = await db.customer.findFirst({
+  // 3. Admin / Staff preview:
+  // When an Admin or Staff previews the Customer Portal, default to previewing
+  // the dedicated Demo Customer (Robert Fox).
+  if (session.role === 'ADMIN' || session.role === 'STAFF') {
+    const demoCustomer = await db.customer.findFirst({
+      where: { user: { email: 'robert.fox@example.com' } },
       include: { user: true },
-      orderBy: { user: { createdAt: 'asc' } },
     })
-    return existingCustomer || null
+    if (demoCustomer) return demoCustomer
   }
 
   return null

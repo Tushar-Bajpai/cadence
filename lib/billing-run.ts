@@ -33,7 +33,7 @@ export async function runBillingBatch(now = new Date(), batchSize = 100): Promis
       where: {
         status: SubStatus.ACTIVE,
         isPaused: false,
-        nextBillingDate: { lte: now },
+        OR: [{ nextBillingDate: { lte: now } }, { nextBillingDate: null }],
         ...(processedIds.size > 0 ? { id: { notIn: Array.from(processedIds) } } : {}),
       },
       include: {
@@ -49,6 +49,11 @@ export async function runBillingBatch(now = new Date(), batchSize = 100): Promis
           },
         },
         customer: true,
+        invoices: {
+          orderBy: { periodEnd: 'desc' },
+          take: 1,
+          select: { periodEnd: true },
+        },
       },
       take: batchSize,
       orderBy: { nextBillingDate: 'asc' },
@@ -78,17 +83,16 @@ async function billSubscription(
       lines: true
       discounts: { include: { discount: { include: { products: true } } } }
       customer: true
+      invoices: {
+        orderBy: { periodEnd: 'desc' }
+        take: 1
+        select: { periodEnd: true }
+      }
     }
   }>,
   now: Date,
   result: BillingRunResult
 ) {
-  if (!sub.nextBillingDate) {
-    result.failed++
-    result.errors.push(`Sub ${sub.id}: ACTIVE but nextBillingDate is missing`)
-    return
-  }
-
   // Resolve each line product's CURRENT taxes so we can compute exact line tax
   // at billing time. This keeps taxes "auto-calculated" and correctly handles
   // FIXED-type taxes (which cannot be expressed via the percentage snapshot
@@ -114,7 +118,14 @@ async function billSubscription(
     ])
   )
 
-  let currentNext = new Date(sub.nextBillingDate)
+  // Older active subscriptions may not have had a billing cursor persisted.
+  // Resume after the latest invoice when available; otherwise start at the
+  // subscription's original start date.
+  let currentNext = sub.nextBillingDate
+    ? new Date(sub.nextBillingDate)
+    : sub.invoices[0]?.periodEnd
+      ? new Date(sub.invoices[0].periodEnd)
+      : new Date(sub.startDate)
   let cycles = 0
 
   while (currentNext <= now && cycles < MAX_CATCHUP_CYCLES) {

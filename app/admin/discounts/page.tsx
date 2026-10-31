@@ -5,6 +5,7 @@ import { Tag, Plus, X, Trash2, Power, Pencil, Loader2 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { useAdminStore } from '@/stores/use-admin-store'
 import { createTaxSchema } from '@/lib/validators'
+import { CardSkeletonGrid } from '@/components/ui/skeleton'
 
 interface DiscountRow {
   id: string
@@ -301,9 +302,7 @@ export default function DiscountsPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-white/40" />
-          </div>
+          <CardSkeletonGrid count={3} />
         ) : discounts.length === 0 ? (
           <p className="text-xs text-white/40 font-mono py-8 text-center">No discount rules yet.</p>
         ) : (
@@ -441,9 +440,7 @@ export default function DiscountsPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-white/40" />
-          </div>
+          <CardSkeletonGrid count={3} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {taxes.map((t) => (

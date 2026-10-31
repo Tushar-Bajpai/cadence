@@ -18,6 +18,7 @@ import {
   Shield,
   Activity,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function PortalProfilePage() {
   const router = useRouter()
@@ -114,7 +115,30 @@ export default function PortalProfilePage() {
         </div>
 
         {loading ? (
-          <div className="h-96 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" aria-busy="true">
+            <div className="lg:col-span-7 rounded-3xl bg-white/[0.03] border border-white/10 p-6 sm:p-8 space-y-6">
+              <div className="flex items-center gap-4 pb-6 border-b border-white/10">
+                <Skeleton className="size-16 rounded-2xl" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-3 w-52" />
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                </div>
+              </div>
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+              <Skeleton className="h-11 w-32 rounded-xl" />
+            </div>
+            <div className="lg:col-span-5 rounded-3xl bg-white/[0.03] border border-white/10 p-6 sm:p-8 space-y-5">
+              <Skeleton className="h-5 w-44" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Column: Editable Form */}
@@ -308,4 +332,3 @@ export default function PortalProfilePage() {
     </div>
   )
 }
-

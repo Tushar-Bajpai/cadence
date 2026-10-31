@@ -64,6 +64,12 @@ export function apiHandler<T>(
         if (error.code === 'P2025') {
           return NextResponse.json({ error: 'Record not found' }, { status: 404 })
         }
+        if (error.code === 'P1001' || error.code === 'P1002' || error.code === 'P1008' || error.code === 'P2024') {
+          return NextResponse.json(
+            { error: 'Database is currently warming up or reconnecting. Please retry in a few seconds.' },
+            { status: 503 }
+          )
+        }
       }
 
       if (error instanceof Prisma.PrismaClientInitializationError) {
@@ -75,8 +81,14 @@ export function apiHandler<T>(
 
       const err = error as Error
       console.error('[API Error]:', err)
+      const rawMessage = err?.message || 'Internal server error'
+      const sanitizedMessage =
+        rawMessage.includes("Can't reach database server") || rawMessage.includes('prisma')
+          ? 'Database is currently warming up or reconnecting. Please retry in a few seconds.'
+          : rawMessage
+
       return NextResponse.json(
-        { error: err?.message || 'Internal server error' },
+        { error: sanitizedMessage },
         { status: 500 }
       )
     }

@@ -7,7 +7,7 @@ import { ALLOWED_TRANSITIONS } from '@/lib/subscription-state'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
 
@@ -143,7 +143,7 @@ export const GET = apiHandler(null, async (req: NextRequest, session, context?: 
   }
 })
 
-export const PATCH = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
+export const PATCH = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
 
@@ -223,7 +223,7 @@ export const PATCH = apiHandler(null, async (req: NextRequest, session, context?
   return { success: true, message: 'Subscription updated successfully' }
 })
 
-export const DELETE = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
+export const DELETE = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest, session, context?: ApiContext) => {
   const params = await context?.params
   const id = params?.id as string
 

@@ -8,7 +8,7 @@ import { calcLineTax, getUnitPrice } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async (req: NextRequest) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') as SubStatus | null
   const search = searchParams.get('search') || ''
@@ -70,7 +70,7 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
   })
 })
 
-export const POST = apiHandler(null, async (req: NextRequest) => {
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   let body: any = {}
   try {
     body = await req.json()

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 // Quotation templates are readable by ADMIN + STAFF.
 // Template lines store productId/variantId references, with details hydrated.
-export const GET = apiHandler(null, async () => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async () => {
   let templates = await db.quotationTemplate.findMany({
     orderBy: { name: 'asc' },
     include: {

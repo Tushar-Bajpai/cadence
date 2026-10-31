@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 // Invoice list. Every list endpoint is paginated (ground rule)
 // with a total count for the pager. Filters: status (incl. OVERDUE pseudo
 // status), customer, date range, search.
-export const GET = apiHandler(null, async (req: NextRequest) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
   const search = searchParams.get('search') || ''

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
 import { RunBillingModal } from '@/components/admin/run-billing-modal'
+import { TableSkeleton } from '@/components/ui/skeleton'
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([])
@@ -138,7 +139,9 @@ export default function InvoicesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
-              {invoices.length === 0 ? (
+              {loading && invoices.length === 0 ? (
+                <TableSkeleton columns={9} rows={6} />
+              ) : invoices.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-10 text-center text-white/40 font-mono">
                     No invoices found.

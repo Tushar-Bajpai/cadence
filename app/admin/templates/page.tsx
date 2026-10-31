@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, X, Trash2, Loader2, FileText, CalendarClock, Package } from 'lucide-react'
+import { Plus, X, Trash2, Loader2, FileText, CalendarClock, Package, AlertTriangle } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 import { createTemplateSchema } from '@/lib/validators'
+import { CardSkeletonGrid } from '@/components/ui/skeleton'
 
 interface TemplateRow {
   id: string
@@ -44,6 +45,7 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<TemplateRow | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Create form
@@ -133,12 +135,19 @@ export default function TemplatesPage() {
     }
   }
 
-  const deleteTemplate = async (tpl: TemplateRow) => {
-    if (!confirm(`Delete template "${tpl.name}"?`)) return
-    setBusyId(tpl.id)
+  const deleteTemplate = async () => {
+    if (!deleteTarget) return
+    const template = deleteTarget
+    setBusyId(template.id)
+    setError(null)
     try {
-      await fetch(`/api/templates/${tpl.id}`, { method: 'DELETE' })
-      fetchData()
+      const res = await fetch(`/api/templates/${template.id}`, { method: 'DELETE' })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Unable to delete this template.')
+      setTemplates((current) => current.filter((item) => item.id !== template.id))
+      setDeleteTarget(null)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unable to delete this template.')
     } finally {
       setBusyId(null)
     }
@@ -196,9 +205,7 @@ export default function TemplatesPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-10">
-          <Loader2 className="w-6 h-6 animate-spin text-white/40" />
-        </div>
+        <CardSkeletonGrid count={4} />
       ) : templates.length === 0 ? (
         <p className="text-xs text-white/40 font-mono py-8 text-center">No quotation templates yet.</p>
       ) : (
@@ -221,7 +228,7 @@ export default function TemplatesPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => deleteTemplate(t)}
+                  onClick={() => setDeleteTarget(t)}
                   disabled={busyId === t.id}
                   title="Delete template"
                   className="grid size-7 place-items-center rounded-lg border border-white/15 text-white/40 hover:text-rose-300 hover:border-rose-500/40 transition cursor-pointer disabled:opacity-40 shrink-0"
@@ -407,6 +414,66 @@ export default function TemplatesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !busyId) setDeleteTarget(null)
+          }}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-template-title"
+            aria-describedby="delete-template-description"
+            className="w-full max-w-md rounded-3xl border border-white/15 bg-[#0e0c24] p-6 text-white shadow-2xl"
+          >
+            <div className="flex items-start gap-4">
+              <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-rose-400/30 bg-rose-500/15 text-rose-300">
+                <AlertTriangle className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="delete-template-title" className="text-base font-semibold">
+                  Delete quotation template?
+                </h2>
+                <p id="delete-template-description" className="mt-2 text-sm leading-relaxed text-white/60">
+                  This will permanently remove{' '}
+                  <span className="font-medium text-white/90">“{deleteTarget.name}”</span>.
+                  Existing quotations will not be changed.
+                </p>
+              </div>
+            </div>
+
+            {error && (
+              <p className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] text-red-300">
+                {error}
+              </p>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-3 border-t border-white/10 pt-4">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={busyId === deleteTarget.id}
+                className="rounded-full px-4 py-2 text-xs font-medium text-white/60 transition hover:text-white disabled:opacity-40"
+              >
+                Keep template
+              </button>
+              <button
+                type="button"
+                onClick={deleteTemplate}
+                disabled={busyId === deleteTarget.id}
+                className="inline-flex items-center gap-2 rounded-full bg-rose-500/90 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {busyId === deleteTarget.id && <Loader2 className="size-3.5 animate-spin" />}
+                {busyId === deleteTarget.id ? 'Deleting…' : 'Delete template'}
+              </button>
+            </div>
           </div>
         </div>
       )}

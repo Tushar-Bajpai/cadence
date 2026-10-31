@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = apiHandler(null, async () => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async () => {
   const discounts = await db.discount.findMany({
     orderBy: { startDate: 'desc' },
     include: {

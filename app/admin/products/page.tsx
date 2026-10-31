@@ -5,6 +5,7 @@ import { Package, Plus, Tag, Check, X, Layers, Clock, ShieldCheck } from 'lucide
 import { formatCurrency } from '@/lib/format'
 import { useAdminStore } from '@/stores/use-admin-store'
 import { createProductSchema, createPlanSchema } from '@/lib/validators'
+import { CardSkeletonGrid } from '@/components/ui/skeleton'
 
 export default function ProductsPage() {
   const {
@@ -159,7 +160,7 @@ export default function ProductsPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading ? <CardSkeletonGrid /> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((p) => (
             <div
               key={p.id}
@@ -212,7 +213,7 @@ export default function ProductsPage() {
               </div>
             </div>
           ))}
-        </div>
+        </div>}
       </div>
 
       {/* Plans Section */}
@@ -239,7 +240,7 @@ export default function ProductsPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {loading ? <CardSkeletonGrid /> : <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan) => (
             <div
               key={plan.id}
@@ -283,7 +284,7 @@ export default function ProductsPage() {
               </div>
             </div>
           ))}
-        </div>
+        </div>}
       </div>
 
       {/* New Product Modal */}

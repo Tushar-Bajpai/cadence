@@ -40,7 +40,7 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
   }))
 })
 
-export const POST = apiHandler(null, async (req: NextRequest) => {
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const data = createProductSchema.parse(await req.json())
 
   const product = await db.product.create({
@@ -63,4 +63,3 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
 
   return { success: true, product }
 })
-

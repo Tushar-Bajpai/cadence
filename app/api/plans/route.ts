@@ -31,7 +31,7 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
   }))
 })
 
-export const POST = apiHandler(null, async (req: NextRequest) => {
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const data = createPlanSchema.parse(await req.json())
 
   const plan = await db.plan.create({
@@ -51,4 +51,3 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
 
   return { success: true, plan }
 })
-

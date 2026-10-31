@@ -280,6 +280,7 @@ async function runPhase9Tests() {
           name: 'Pro Plan',
           billingPeriod: BillingPeriod.MONTHLY,
           price: 1999,
+          availableFrom: new Date(),
         },
       })
     }

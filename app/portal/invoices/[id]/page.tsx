@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { PortalTopNavbar } from '@/components/portal/portal-top-navbar'
 import { RazorpayPaymentModal } from '@/components/razorpay-payment-modal'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   ArrowLeft,
   Printer,
@@ -184,7 +185,19 @@ export default function PortalInvoiceDetailPage() {
         )}
 
         {loading ? (
-          <div className="h-96 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse print:hidden" />
+          <div className="rounded-3xl bg-white/[0.03] border border-white/10 p-6 sm:p-10 space-y-8 print:hidden" aria-busy="true">
+            <Skeleton className="h-12 w-full rounded-2xl" />
+            <div className="flex items-start justify-between gap-6">
+              <div className="space-y-3">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-64" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <Skeleton className="h-12 w-36 rounded-xl" />
+            </div>
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-48 w-full rounded-2xl" />
+          </div>
         ) : invoice ? (
           /* Printable Invoice Sheet */
           <div className="rounded-3xl bg-[#0b0924]/90 backdrop-blur-xl border border-white/10 p-6 sm:p-10 space-y-8 shadow-2xl print:bg-white print:text-black print:border-none print:shadow-none print:p-0">
@@ -415,4 +428,3 @@ export default function PortalInvoiceDetailPage() {
     </div>
   )
 }
-
