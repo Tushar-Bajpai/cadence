@@ -254,7 +254,7 @@ export function JellyGuide({ currentPage = 0, className = '' }: JellyGuideProps)
   return (
     <div
       ref={containerRef}
-      className={`hidden md:block fixed top-0 left-0 z-40 select-none pointer-events-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${className}`}
+      className={`hidden md:block fixed top-0 left-0 z-40 select-none pointer-events-none transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${className}`}
       style={{
         transform: `translate3d(${coords.x}px, ${coords.y}px, 0)`,
       }}

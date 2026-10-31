@@ -225,7 +225,7 @@ export default function AuthPage() {
                     </label>
                     {mode === 'signin' && (
                       <Link
-                        href="/forgot-password"
+                        href={`/forgot-password?email=${encodeURIComponent(email)}`}
                         className="text-[10px] text-white/40 hover:text-white transition cursor-pointer"
                       >
                         Forgot password?
