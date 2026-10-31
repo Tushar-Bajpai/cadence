@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import {
   Download,
   Filter,
@@ -17,6 +18,7 @@ import {
   CreditCard,
   Rocket,
   ArrowRight,
+  TrendingUp,
 } from 'lucide-react'
 import { InvoiceModal, InvoiceDetailData } from '@/components/admin/invoice-modal'
 import { RunBillingModal } from '@/components/admin/run-billing-modal'
@@ -88,6 +90,14 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center gap-2 px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs font-semibold backdrop-blur-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <TrendingUp className="w-4 h-4 text-[#a79aff]" />
+              <span>Finance Dashboard</span>
+            </Link>
+
             <button
               onClick={() => setIsRunBillingOpen(true)}
               className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_10px_35px_rgba(137,120,255,.4)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
@@ -108,6 +118,37 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 sm:px-10 py-8 space-y-10">
+        {/* Phase 9 Executive Finance Dashboard Banner */}
+        <div className="relative overflow-hidden rounded-3xl border border-[#8978ff]/30 bg-gradient-to-r from-[#8978ff]/15 via-indigo-950/40 to-[#0e0c24] p-6 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#8978ff]/20 border border-[#8978ff]/40 flex items-center justify-center shrink-0 shadow-inner">
+              <TrendingUp className="w-6 h-6 text-[#a79aff]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#a79aff] font-bold">
+                  Phase 9 &bull; Analytics & Ledger
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  LIVE
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-white mt-1">
+                Executive Finance & MRR Dashboard
+              </h3>
+              <p className="text-xs text-white/60 mt-0.5">
+                Normalized MRR, monthly revenue charts, lifecycle distribution, and instant overdue invoice settlement.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/admin/dashboard"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_4px_16px_rgba(137,120,255,0.4)] shrink-0 transition"
+          >
+            <span>Open Finance Dashboard</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
         {/* 2. Real Financial & Operations Metrics */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
