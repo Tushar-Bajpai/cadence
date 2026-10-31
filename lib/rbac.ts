@@ -15,6 +15,13 @@ export class ForbiddenError extends Error {
   }
 }
 
+export class NotFoundError extends Error {
+  constructor(message = 'Resource not found') {
+    super(message)
+    this.name = 'NotFoundError'
+  }
+}
+
 export function hasRole(session: SessionPayload | null, allowedRoles: Role[]): boolean {
   if (!session) return false
   return allowedRoles.includes(session.role)

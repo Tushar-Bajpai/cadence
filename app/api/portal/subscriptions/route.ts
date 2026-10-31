@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler } from '@/lib/api'
+import { apiHandler, UnauthorizedError, NotFoundError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { formatCurrency, formatDate, formatSubNumber } from '@/lib/format'
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 
 export const GET = apiHandler(null, async (req: NextRequest, session) => {
   const customer = await getPortalCustomer(session)
-  if (!customer) throw new Error('Customer not found')
+  if (!customer) throw new UnauthorizedError('Customer not authenticated')
 
   const subscriptions = await db.subscription.findMany({
     where: { customerId: customer.id },
@@ -67,7 +67,7 @@ export const GET = apiHandler(null, async (req: NextRequest, session) => {
 
 export const POST = apiHandler(null, async (req: NextRequest, session) => {
   const customer = await getPortalCustomer(session)
-  if (!customer) throw new Error('Customer not found')
+  if (!customer) throw new UnauthorizedError('Customer not authenticated')
 
   const { planId, variantId, productId, quantity } = portalCreateSubscriptionSchema.parse(await req.json())
 
@@ -75,7 +75,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session) => {
     where: { id: planId },
   })
 
-  if (!plan) throw new Error('Plan not found')
+  if (!plan) throw new NotFoundError('Plan not found')
 
   const qty = Math.max(quantity, plan.minQuantity)
 
@@ -133,4 +133,3 @@ export const POST = apiHandler(null, async (req: NextRequest, session) => {
     subscription,
   }
 })
-

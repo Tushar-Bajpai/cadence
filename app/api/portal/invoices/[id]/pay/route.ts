@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, NotFoundError, UnauthorizedError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { InvoiceStatus, PayMethod } from '@prisma/client'
@@ -14,11 +14,11 @@ const portalPaymentSchema = z.object({
 
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const customer = await getPortalCustomer(session)
-  if (!customer) throw new Error('Customer not found')
+  if (!customer) throw new UnauthorizedError('Customer not authenticated')
 
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new Error('Invoice ID is required')
+  if (!idOrSeq) throw new NotFoundError('Invoice ID is required')
 
   const isNumeric = /^\d+$/.test(idOrSeq)
   const invoice = await db.invoice.findFirst({
@@ -29,22 +29,32 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
   })
 
   if (!invoice) {
-    throw new Error('Invoice not found or access denied')
+    throw new NotFoundError('Invoice not found')
   }
 
   if (invoice.status === 'PAID') {
     return { success: true, message: 'Invoice is already paid in full.' }
   }
 
-  const raw = await req.json().catch(() => ({}))
-  const { method, note } = portalPaymentSchema.parse(raw)
+  const body = await req.json().catch(() => ({}))
+  const { method = 'CARD', note = 'Settled via Customer Portal', amount } = body
 
-  const amountToPay = Number(invoice.total) - Number(invoice.amountPaid)
+  const balanceDue = Number(invoice.total) - Number(invoice.amountPaid)
+  const amountToPay = amount ? Math.min(Number(amount), balanceDue) : balanceDue
 
-  const payment = await db.$transaction(async (tx) => {
-    const p = await tx.payment.create({
+  const paymentResult = await db.$transaction(async (tx) => {
+    // Re-read invoice inside transaction to avoid race conditions
+    const currentInv = await tx.invoice.findUnique({
+      where: { id: invoice.id },
+    })
+    if (!currentInv) throw new NotFoundError('Invoice not found')
+
+    const newAmountPaid = Number(currentInv.amountPaid) + amountToPay
+    const isFullyPaid = newAmountPaid >= Number(currentInv.total)
+
+    const payment = await tx.payment.create({
       data: {
-        invoiceId: invoice.id,
+        invoiceId: currentInv.id,
         customerId: customer.id,
         method: (method as PayMethod) || PayMethod.CARD,
         amount: amountToPay,
@@ -54,20 +64,20 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     })
 
     const updatedInvoice = await tx.invoice.update({
-      where: { id: invoice.id },
+      where: { id: currentInv.id },
       data: {
-        amountPaid: Number(invoice.total),
-        status: InvoiceStatus.PAID,
+        amountPaid: newAmountPaid,
+        status: isFullyPaid ? InvoiceStatus.PAID : currentInv.status,
       },
     })
 
-    return { payment: p, invoice: updatedInvoice }
+    return { payment, invoice: updatedInvoice }
   })
 
   return {
     success: true,
-    message: `Invoice #${invoice.seq} paid successfully! Receipt generated.`,
-    payment,
+    message: `Payment of ₹${amountToPay} recorded successfully.`,
+    payment: paymentResult.payment,
+    invoice: paymentResult.invoice,
   }
 })
-

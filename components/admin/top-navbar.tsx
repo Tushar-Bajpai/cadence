@@ -4,23 +4,22 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  Home,
-  Users,
-  ShoppingBag,
-  CreditCard,
-  ScrollText,
-  Box,
-  Tag,
-  FileText,
-  Search,
-  Settings,
-  Zap,
-  ExternalLink,
-  User,
-  LogOut,
-} from 'lucide-react'
-import { useAdminStore } from '@/stores/use-admin-store'
-import { useAuthStore } from '@/stores/use-auth-store'
+  IconSmartHome,
+  IconUsers,
+  IconShoppingBag,
+  IconReceipt2,
+  IconBox,
+  IconTag,
+  IconFileText,
+  IconSearch,
+  IconSettings,
+  IconBolt,
+  IconExternalLink,
+  IconUser,
+  IconShieldLock,
+  IconCreditCard,
+  IconChartBar,
+} from '@tabler/icons-react'
 
 interface TopNavbarProps {
   onRunBillingClick?: () => void
@@ -39,12 +38,12 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   const setSearchQuery = store.setSearchQuery
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
-  // 7 navigation icon tabs matching reference screenshot:
+  // Navigation icon tabs matching reference screenshot:
   const navItems = [
     {
-      name: 'Dashboard',
-      href: '/admin',
-      icon: Home,
+      name: 'Finance Dashboard',
+      href: '/admin/dashboard',
+      icon: IconSmartHome,
     },
     {
       name: 'Customers',
@@ -84,7 +83,9 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   ]
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin'
+    if (href === '/admin/dashboard' || href === '/admin') {
+      return pathname === '/admin' || pathname === '/admin/dashboard'
+    }
     return pathname.startsWith(href)
   }
 
@@ -97,10 +98,9 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   return (
     <header className="sticky top-0 z-40 w-full bg-[#08061d]/90 backdrop-blur-xl border-b border-white/10 px-5 py-3 select-none">
       <div className="w-full flex items-center justify-between gap-4">
-        {/* Left Section: 4-Dots Logo + Cadence Title + 7 Icon Tabs */}
+        {/* Left Section: 4-Dots Logo + Cadence Title + Navigation Tabs */}
         <div className="flex items-center gap-6 sm:gap-7 shrink-0">
-          {/* Exact 4-dots brand logo matching reference image */}
-          <Link href="/admin" className="flex items-center gap-2.5 group">
+          <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
             <svg
               className="w-5 h-5 shrink-0 group-hover:scale-105 transition-transform"
               viewBox="0 0 24 24"
@@ -184,12 +184,15 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             </button>
 
             {showSettingsMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-[#120e28] rounded-2xl border border-white/15 shadow-2xl p-2 z-50 text-xs space-y-1 backdrop-blur-xl animate-in fade-in duration-150">
-                <div className="px-3 py-2 border-b border-white/10 mb-1">
-                  <p className="font-semibold text-white truncate">Administrator</p>
-                  <p className="text-[10px] text-white/50 font-mono">admin@cadence.dev</p>
-                </div>
-
+              <div className="absolute right-0 mt-2 w-52 bg-[#120e28] rounded-2xl border border-white/15 shadow-2xl p-1.5 z-50 text-xs space-y-1 backdrop-blur-xl animate-in fade-in duration-150">
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setShowSettingsMenu(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-left font-medium cursor-pointer"
+                >
+                  <IconChartBar size={16} stroke={1.8} className="text-[#8978ff]" />
+                  <span>Finance Dashboard</span>
+                </Link>
                 <button
                   onClick={() => {
                     setShowSettingsMenu(false)
@@ -229,19 +232,6 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   <ExternalLink className="w-4 h-4 text-white/50" />
                   <span>Landing Magazine</span>
                 </Link>
-
-                <div className="my-1 border-t border-white/10" />
-
-                <button
-                  onClick={async () => {
-                    setShowSettingsMenu(false)
-                    await useAuthStore.getState().logout()
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-300 hover:text-rose-200 hover:bg-rose-500/10 text-left font-medium cursor-pointer transition-colors"
-                >
-                  <LogOut className="w-4 h-4 text-rose-400" />
-                  <span>Sign Out</span>
-                </button>
               </div>
             )}
           </div>

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, NotFoundError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { InvoiceStatus } from '@prisma/client'
 import { formatInvoiceNumber, formatCurrency, formatDate, formatDateTime } from '@/lib/format'
@@ -13,13 +13,22 @@ export const GET = apiHandler(null, async (
 ) => {
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new Error('Invoice ID is required')
+
+  if (!idOrSeq) throw new NotFoundError('Invoice ID is required')
 
   // Support lookup by cuid id or sequence number
   const isNumeric = /^\d+$/.test(idOrSeq)
 
+  // Defense-in-depth: If the caller is a customer, restrict strictly to their invoices
+  const customerFilter = session?.role === 'CUSTOMER' && session.customerId
+    ? { customerId: session.customerId }
+    : {}
+
   const invoice = await db.invoice.findFirst({
-    where: isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq },
+    where: {
+      ...(isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq }),
+      ...customerFilter,
+    },
     include: {
       customer: { include: { user: true } },
       subscription: { include: { plan: true } },
@@ -29,7 +38,9 @@ export const GET = apiHandler(null, async (
     },
   })
 
-  if (!invoice) throw new Error('Invoice not found')
+  if (!invoice) {
+    throw new NotFoundError('Invoice not found')
+  }
 
   const now = new Date()
   const outstanding = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))
@@ -123,8 +134,8 @@ export const GET = apiHandler(null, async (
       id: p.id,
       amount: Number(p.amount),
       formattedAmount: formatCurrency(p.amount),
-      method: p.method,
       date: formatDate(p.date),
+      method: p.method,
       note: p.note,
     })),
   }

@@ -109,7 +109,7 @@ export default function CustomerPortalPage() {
   // Open invoice detail modal (matching Image 3 right card)
   const handleOpenInvoiceModal = async (invoiceIdOrSeq: string | number) => {
     try {
-      const res = await fetch(`/api/invoices/${invoiceIdOrSeq}`)
+      const res = await fetch(`/api/portal/invoices/${invoiceIdOrSeq}`)
       const data = await res.json()
       if (data && !data.error) {
         setSelectedInvoice(data)
@@ -207,6 +207,131 @@ export default function CustomerPortalPage() {
               <p className="mt-1.5 text-sm sm:text-base text-white/50 max-w-2xl">
                 Manage your subscription, view payment history, and update your billing details — all in one place.
               </p>
+            </div>
+
+            {/* Phase 8 Summary Cards */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-white/60">
+                  Account & Billing Overview
+                </h2>
+                <div className="flex items-center gap-3 text-xs">
+                  <a href="/portal/subscriptions" className="text-[#8978ff] hover:underline">
+                    All Subscriptions &rarr;
+                  </a>
+                  <span className="text-white/20">&bull;</span>
+                  <a href="/portal/invoices" className="text-[#8978ff] hover:underline">
+                    All Invoices &rarr;
+                  </a>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Summary Card 1: Active Subscriptions */}
+                <div className="rounded-3xl bg-white/[0.03] backdrop-blur-md border border-white/10 p-5 flex flex-col justify-between hover:border-white/15 transition relative overflow-hidden group">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-white/50 block font-medium">Active Subscriptions</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        {summaryData?.metrics?.activeSubsCount ?? 0} Active
+                      </span>
+                    </div>
+                    <div className="mt-3">
+                      <h3 className="text-lg font-bold text-white">
+                        {summaryData?.currentPlan?.planName || 'No Active Plan'}
+                      </h3>
+                      {summaryData?.currentPlan ? (
+                        <div className="mt-1 flex items-baseline gap-1">
+                          <span className="text-2xl font-extrabold text-white">
+                            ₹{summaryData.currentPlan.price}
+                          </span>
+                          <span className="text-xs text-white/50">
+                            / {summaryData.currentPlan.periodLabel || 'Month'}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-white/40 mt-1">No recurring plan configured.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                    <span className="text-white/40">
+                      {summaryData?.currentPlan?.isPaused ? 'Paused' : 'Auto-renewing'}
+                    </span>
+                    <a href="/portal/subscriptions" className="text-[#8978ff] hover:underline font-medium">
+                      Manage &rarr;
+                    </a>
+                  </div>
+                </div>
+
+                {/* Summary Card 2: Outstanding Amount */}
+                <div className="rounded-3xl bg-white/[0.03] backdrop-blur-md border border-white/10 p-5 flex flex-col justify-between hover:border-white/15 transition relative overflow-hidden group">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-white/50 block font-medium">Outstanding Amount</span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          (summaryData?.metrics?.totalOutstanding ?? 0) > 0
+                            ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                            : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                        }`}
+                      >
+                        {(summaryData?.metrics?.totalOutstanding ?? 0) > 0 ? 'Payment Due' : 'All Settled'}
+                      </span>
+                    </div>
+                    <div className="mt-3">
+                      <div className="text-2xl font-extrabold text-white">
+                        {summaryData?.metrics?.formattedTotalOutstanding || '₹0.00'}
+                      </div>
+                      <p className="text-xs text-white/40 mt-1">
+                        Settled rate:{' '}
+                        <span className="text-white font-medium">
+                          {summaryData?.usage?.invoicingProgress?.percentage ?? 100}%
+                        </span>{' '}
+                        ({summaryData?.usage?.invoicingProgress?.settled ?? 0}/{summaryData?.usage?.invoicingProgress?.total ?? 0})
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                    <span className="text-white/40">Invoices balance</span>
+                    <a href="/portal/invoices" className="text-[#8978ff] hover:underline font-medium">
+                      View all &rarr;
+                    </a>
+                  </div>
+                </div>
+
+                {/* Summary Card 3: Next Invoice */}
+                <div className="rounded-3xl bg-white/[0.03] backdrop-blur-md border border-white/10 p-5 flex flex-col justify-between hover:border-white/15 transition relative overflow-hidden group">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-white/50 block font-medium">Next Invoice</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8978ff]/15 text-[#a79aff] border border-[#8978ff]/30">
+                        Scheduled
+                      </span>
+                    </div>
+                    <div className="mt-3">
+                      <div className="text-xl font-bold text-white">
+                        {summaryData?.metrics?.nextInvoiceDate || 'None scheduled'}
+                      </div>
+                      <p className="text-xs text-white/40 mt-1">
+                        Est. amount:{' '}
+                        <span className="text-white font-semibold">
+                          {summaryData?.metrics?.nextInvoiceAmount || '₹0.00'}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                    <span className="text-white/40">Auto-billing run</span>
+                    <button
+                      onClick={() => setActiveTab('catalog')}
+                      className="text-[#8978ff] hover:underline font-medium cursor-pointer"
+                    >
+                      Upgrade &rarr;
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Section 1: Subscription Overview */}

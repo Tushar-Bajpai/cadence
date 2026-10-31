@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, NotFoundError, UnauthorizedError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { z } from 'zod'
@@ -12,19 +12,24 @@ const portalActionSchema = z.object({
 
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const customer = await getPortalCustomer(session)
-  if (!customer) throw new Error('Customer not found')
+  if (!customer) throw new UnauthorizedError('Customer not authenticated')
 
   const params = await context?.params
-  const id = params?.id as string
-  if (!id) throw new Error('Subscription ID is required')
+  const idOrSeq = params?.id as string
+  if (!idOrSeq) throw new NotFoundError('Subscription ID is required')
+
+  const isNumeric = /^\d+$/.test(idOrSeq)
 
   const subscription = await db.subscription.findFirst({
-    where: { id, customerId: customer.id },
+    where: {
+      ...(isNumeric ? { seq: parseInt(idOrSeq, 10) } : { id: idOrSeq }),
+      customerId: customer.id,
+    },
     include: { plan: true },
   })
 
   if (!subscription) {
-    throw new Error('Subscription not found or access denied')
+    throw new NotFoundError('Subscription not found')
   }
 
   const { action } = portalActionSchema.parse(await req.json())
@@ -37,7 +42,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
       throw new Error('Subscription is already paused.')
     }
     const updated = await db.subscription.update({
-      where: { id },
+      where: { id: subscription.id },
       data: { isPaused: true },
     })
     return { success: true, message: 'Subscription paused successfully.', subscription: updated }
@@ -51,7 +56,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
       throw new Error('Subscription is not paused.')
     }
     const updated = await db.subscription.update({
-      where: { id },
+      where: { id: subscription.id },
       data: { isPaused: false },
     })
     return { success: true, message: 'Subscription resumed successfully.', subscription: updated }
@@ -65,7 +70,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
       throw new Error('Subscription is already closed.')
     }
     const updated = await db.subscription.update({
-      where: { id },
+      where: { id: subscription.id },
       data: { status: 'CLOSED', isPaused: false },
     })
     return { success: true, message: 'Subscription has been cancelled.', subscription: updated }
@@ -73,4 +78,3 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   throw new Error(`Invalid action: ${action}. Allowed: pause, resume, close`)
 })
-

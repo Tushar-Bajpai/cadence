@@ -1,6 +1,12 @@
 import { db } from './db'
 import { SessionPayload } from './session'
 
+/**
+ * Resolves the authenticated customer for portal queries.
+ * Defense-in-depth: If a session is provided, it ONLY resolves the customer
+ * linked to that specific session (userId or customerId). It NEVER falls back
+ * to another customer if a session is present.
+ */
 export async function getPortalCustomer(session: SessionPayload | null) {
   // 1. Direct customerId on session
   if (session?.customerId) {
@@ -20,11 +26,20 @@ export async function getPortalCustomer(session: SessionPayload | null) {
     if (customer) return customer
   }
 
-  // 3. In dev mode without active cookie, resolve first existing customer from database
-  const existingCustomer = await db.customer.findFirst({
-    include: { user: true },
-    orderBy: { user: { createdAt: 'asc' } },
-  })
+  // If a session was explicitly provided but has no matching customer,
+  // NEVER fall back to another customer!
+  if (session) {
+    return null
+  }
 
-  return existingCustomer || null
+  // 3. Fallback only in dev preview when no session is present at all
+  if (process.env.NODE_ENV !== 'production' && !process.env.STRICT_PORTAL_AUTH) {
+    const existingCustomer = await db.customer.findFirst({
+      include: { user: true },
+      orderBy: { user: { createdAt: 'asc' } },
+    })
+    return existingCustomer || null
+  }
+
+  return null
 }

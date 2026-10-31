@@ -3,7 +3,9 @@ import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 import { Role } from '@prisma/client'
 import { getSession, SessionPayload } from './auth'
-import { requireRole, UnauthorizedError, ForbiddenError } from './rbac'
+import { requireRole, UnauthorizedError, ForbiddenError, NotFoundError } from './rbac'
+
+export { NotFoundError, UnauthorizedError, ForbiddenError }
 
 export type ApiContext = {
   params?: Promise<Record<string, string | string[]>>
@@ -24,10 +26,10 @@ export function apiHandler<T>(
       let session: SessionPayload | null = null
 
       if (allowedRoles && allowedRoles.length > 0) {
-        session = await getSession()
+        session = await getSession(req)
         requireRole(session, allowedRoles)
       } else {
-        session = await getSession()
+        session = await getSession(req)
       }
 
       const data = await fn(req, session, context)
@@ -41,6 +43,9 @@ export function apiHandler<T>(
       }
       if (error instanceof ForbiddenError) {
         return NextResponse.json({ error: error.message }, { status: 403 })
+      }
+      if (error instanceof NotFoundError) {
+        return NextResponse.json({ error: error.message }, { status: 404 })
       }
       if (error instanceof ZodError) {
         const message = error.issues.map((e) => e.message).join(', ')

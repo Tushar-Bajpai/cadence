@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, NotFoundError, UnauthorizedError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { getRazorpay, toPaise } from '@/lib/razorpay'
@@ -14,11 +14,11 @@ export const dynamic = 'force-dynamic'
  */
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const customer = await getPortalCustomer(session)
-  if (!customer) throw new Error('Customer not found')
+  if (!customer) throw new UnauthorizedError('Customer not authenticated')
 
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new Error('Invoice ID is required')
+  if (!idOrSeq) throw new NotFoundError('Invoice ID is required')
 
   const isNumeric = /^\d+$/.test(idOrSeq)
   const invoice = await db.invoice.findFirst({
@@ -33,7 +33,7 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     },
   })
 
-  if (!invoice) throw new Error('Invoice not found or access denied')
+  if (!invoice) throw new NotFoundError('Invoice not found')
 
   if (invoice.status === InvoiceStatus.PAID) {
     throw new Error('Invoice is already paid in full')

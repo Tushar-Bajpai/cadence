@@ -20,7 +20,7 @@ import { useAuthStore } from '@/stores/use-auth-store'
 export type { PortalTab }
 
 interface PortalTopNavbarProps {
-  activeTab?: PortalTab
+  activeTab: PortalTab
   onTabChange?: (tab: PortalTab) => void
   customerName?: string
   searchQuery?: string
@@ -31,8 +31,8 @@ export function PortalTopNavbar({
   activeTab: propActiveTab,
   onTabChange: propOnTabChange,
   customerName = 'Subscriber',
-  searchQuery: propSearchQuery,
-  onSearchChange: propOnSearchChange,
+  searchQuery = '',
+  onSearchChange,
 }: PortalTopNavbarProps) {
   const store = usePortalStore()
   const activeTab = propActiveTab ?? store.activeTab
@@ -47,27 +47,32 @@ export function PortalTopNavbar({
     {
       id: 'billing' as PortalTab,
       label: 'Home & Billing',
-      icon: CreditCard,
+      icon: IconSmartHome,
+      href: '/portal',
     },
     {
       id: 'subscriptions' as PortalTab,
       label: 'My Subscriptions',
-      icon: ScrollText,
+      icon: IconRepeat,
+      href: '/portal/subscriptions',
     },
     {
       id: 'invoices' as PortalTab,
       label: 'Invoices & Receipts',
-      icon: FileText,
+      icon: IconReceipt2,
+      href: '/portal/invoices',
     },
     {
       id: 'catalog' as PortalTab,
       label: 'Products & Plans',
-      icon: Sparkles,
+      icon: IconBox,
+      href: '/portal/products',
     },
     {
       id: 'profile' as PortalTab,
       label: 'Profile & Activity',
-      icon: User,
+      icon: IconUser,
+      href: '/portal/profile',
     },
   ]
 
@@ -103,9 +108,14 @@ export function PortalTopNavbar({
               const Icon = item.icon
               const active = activeTab === item.id
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => onTabChange(item.id)}
+                  href={item.href}
+                  onClick={(e) => {
+                    if (onTabChange) {
+                      onTabChange(item.id)
+                    }
+                  }}
                   title={item.label}
                   className={`relative w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
                     active
@@ -113,8 +123,8 @@ export function PortalTopNavbar({
                       : 'bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/[0.08] border border-white/5'
                   }`}
                 >
-                  <Icon className="w-5 h-5" strokeWidth={1.8} />
-                </button>
+                  <Icon size={20} stroke={1.8} />
+                </Link>
               )
             })}
           </nav>
@@ -128,7 +138,7 @@ export function PortalTopNavbar({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               placeholder="Search invoices, plans..."
               className="w-full h-10 bg-white/[0.04] border border-white/10 rounded-2xl pl-9 pr-4 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#8978ff] focus:ring-1 focus:ring-[#8978ff] transition"
             />
@@ -164,16 +174,14 @@ export function PortalTopNavbar({
                   <p className="text-[10px] text-white/50 font-mono">Customer Workspace</p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    onTabChange('profile')
-                    setShowSettingsMenu(false)
-                  }}
+                <Link
+                  href="/portal/profile"
+                  onClick={() => setShowSettingsMenu(false)}
                   className="w-full text-left px-3.5 py-2 text-white/80 hover:text-white hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
                 >
                   <User className="w-4 h-4 text-[#8978ff]" strokeWidth={1.8} />
                   <span>My Profile & Activity</span>
-                </button>
+                </Link>
 
                 <Link
                   href="/"
