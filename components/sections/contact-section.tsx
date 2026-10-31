@@ -12,6 +12,7 @@ import {
 import { SiX, SiVercel } from 'react-icons/si'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa6'
 import { CadenceLogo } from '@/components/cadence-logo'
+import CircularText from '@/components/circular-text'
 
 interface ContactSectionProps {
   pageStateClass: string
@@ -114,7 +115,7 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
 
         <div className="grid gap-8 pb-8 sm:pb-10 lg:grid-cols-12 lg:gap-6">
           {/* Brand column */}
-          <div className="flex flex-col items-start gap-3 lg:col-span-4 lg:gap-4">
+          <div className="flex flex-col items-start gap-3 lg:col-span-3 lg:gap-4">
             <div className="flex items-center gap-2.5">
               <CadenceLogo className="size-6 sm:size-7" />
               <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">
@@ -167,7 +168,7 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
           </div>
 
           {/* Link sections — modules & flows from the project build plan */}
-          <nav className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:col-span-8 lg:gap-x-4">
+          <nav className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:col-span-7 lg:gap-x-4">
             <div>
               <h4 className="footer-col-head">Product</h4>
               <ul>
@@ -269,6 +270,26 @@ export function ContactSection({ pageStateClass, onNavigate }: ContactSectionPro
               </ul>
             </div>
           </nav>
+
+          {/* Rotating corner badge — circular text seal at the extreme right */}
+          <div className="hidden lg:flex lg:col-span-2 items-start justify-end">
+            <CircularText
+              text="cadence*by*codelifters*"
+              onHover="speedUp"
+              direction="clockwise"
+              spinDuration={18}
+              size={136}
+              fontSize={11}
+              fontWeight={700}
+              draggable
+              hoverTilt={16}
+              ring
+              ringColor="rgba(137, 120, 255, 0.45)"
+              className="circular-text--corner shrink-0 text-white/70"
+            >
+              <CadenceLogo className="size-9" />
+            </CircularText>
+          </div>
         </div>
 
         {/* Legal bar */}
