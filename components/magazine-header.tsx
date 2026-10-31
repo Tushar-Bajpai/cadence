@@ -59,6 +59,12 @@ export function MagazineHeader({ onNavigate }: MagazineHeaderProps) {
 
         <div className="hidden items-center gap-3 sm:flex">
           <Link
+            href="/portal"
+            className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold tracking-[0.12em] uppercase backdrop-blur-md transition hover:bg-white/15 text-white"
+          >
+            Customer Portal
+          </Link>
+          <Link
             href="/admin"
             className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold tracking-[0.12em] uppercase backdrop-blur-md transition hover:bg-white/15 text-white"
           >
@@ -96,6 +102,13 @@ export function MagazineHeader({ onNavigate }: MagazineHeaderProps) {
             </button>
           </nav>
           <div className="mt-2 flex flex-col gap-2.5">
+            <Link
+              href="/portal"
+              onClick={() => setOpen(false)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-xs font-semibold tracking-[0.12em] uppercase text-white transition hover:bg-white/10"
+            >
+              Customer Portal
+            </Link>
             <Link
               href="/admin"
               onClick={() => setOpen(false)}

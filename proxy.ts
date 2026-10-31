@@ -38,14 +38,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 2) Customer portal: CUSTOMER only
+  // 2) Customer portal: CUSTOMER only (allow preview in dev)
   if (pathname.startsWith(PORTAL_PREFIX)) {
     if (!session) {
+      if (process.env.NODE_ENV !== 'production') {
+        return NextResponse.next()
+      }
       const url = new URL('/auth', request.url)
       url.searchParams.set('next', pathname)
       return NextResponse.redirect(url)
     }
-    if (session.role !== 'CUSTOMER') return NextResponse.redirect(new URL('/admin', request.url))
+    if (session.role !== 'CUSTOMER' && process.env.NODE_ENV === 'production') {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
     return NextResponse.next()
   }
 

@@ -141,6 +141,16 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
             />
           </form>
 
+          {/* Quick link to Customer Portal */}
+          <Link
+            href="/portal"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-[11px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white/80 hover:text-white text-xs font-medium transition cursor-pointer"
+            title="Open Customer Billing Portal"
+          >
+            <Box className="w-3.5 h-3.5 text-[#8978ff]" />
+            <span>Customer Portal</span>
+          </Link>
+
           {/* Quick Billing Engine Run Action */}
           <button
             onClick={onRunBillingClick}
