@@ -18,7 +18,13 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
 
   if (!id) throw new Error('Subscription ID is required')
 
-  const body = await req.json()
+  let body: any = {}
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 })
+  }
+
   // Accept both 'to' (per BUILD_PLAN.md) and 'targetStatus'
   const targetStatus = (body.to || body.targetStatus) as SubStatus | undefined
   const action = body.action as 'pause' | 'resume' | 'renew' | undefined
@@ -105,8 +111,12 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
       )
     }
 
-    // Plan switch: close early only if plan.closable
-    if (targetStatus === SubStatus.CLOSED && !canCloseEarly(sub.plan)) {
+    // Plan switch: close early applies when actively running subscription is closed before expiry
+    if (
+      sub.status === SubStatus.ACTIVE &&
+      targetStatus === SubStatus.CLOSED &&
+      !canCloseEarly(sub.plan)
+    ) {
       return NextResponse.json(
         { error: `Plan "${sub.plan.name}" does not allow early closing (closable=false).` },
         { status: 400 }

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { apiHandler } from '@/lib/api'
 import { db } from '@/lib/db'
 import { SubStatus, Prisma, TaxType } from '@prisma/client'
@@ -70,7 +70,13 @@ export const GET = apiHandler(null, async (req: NextRequest) => {
 })
 
 export const POST = apiHandler(null, async (req: NextRequest) => {
-  const body = await req.json()
+  let body: any = {}
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 })
+  }
+
   const {
     customerId,
     templateId,
@@ -83,14 +89,18 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
   } = body
 
   if (!customerId) {
-    throw new Error('customerId is required')
+    return NextResponse.json({ error: 'customerId is required' }, { status: 400 })
   }
 
   let targetPlanId = rawPlanId
-  let targetLines = inputLines
+  let targetLines = Array.isArray(inputLines) ? inputLines : []
   let start = new Date(startDate)
+  if (isNaN(start.getTime())) start = new Date()
+
+  const safeMonths = Math.max(1, Number(expiryMonths) || 12)
   let expiry = new Date(start)
-  expiry.setMonth(expiry.getMonth() + (Number(expiryMonths) || 12))
+  expiry.setMonth(expiry.getMonth() + safeMonths)
+
   let initialStatus: SubStatus = inputStatus || SubStatus.DRAFT
 
   // If created from Quotation Template
@@ -104,7 +114,10 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
     })
 
     if (!template) {
-      throw new Error(`Quotation template "${templateId}" not found`)
+      return NextResponse.json(
+        { error: `Quotation template "${templateId}" not found` },
+        { status: 404 }
+      )
     }
 
     targetPlanId = template.planId
@@ -165,11 +178,16 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
   }
 
   if (!targetPlanId) {
-    throw new Error('planId or templateId is required')
+    return NextResponse.json(
+      { error: 'Either planId or templateId is required' },
+      { status: 400 }
+    )
   }
 
   const plan = await db.plan.findUnique({ where: { id: targetPlanId } })
-  if (!plan) throw new Error('Plan not found')
+  if (!plan) {
+    return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
+  }
 
   // Default fallback line if no lines specified
   if (targetLines.length === 0) {
@@ -196,8 +214,11 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
     0
   )
   if (totalQty < plan.minQuantity) {
-    throw new Error(
-      `Plan "${plan.name}" requires a minimum quantity of ${plan.minQuantity}. Given: ${totalQty}.`
+    return NextResponse.json(
+      {
+        error: `Plan "${plan.name}" requires a minimum quantity of ${plan.minQuantity}. Given: ${totalQty}.`,
+      },
+      { status: 400 }
     )
   }
 
@@ -237,6 +258,8 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
     },
   })
 
+  const totalAmount = newSub.lines.reduce((s, l) => s + Number(l.amount), 0)
+
   return {
     success: true,
     subscription: {
@@ -246,6 +269,10 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
       status: newSub.status,
       startDate: newSub.startDate.toISOString(),
       expiryDate: newSub.expiryDate.toISOString(),
+      totalAmount,
+      formattedTotal: formatCurrency(totalAmount),
+      customerName: newSub.customer.user.name,
+      planName: newSub.plan.name,
     },
   }
 })
