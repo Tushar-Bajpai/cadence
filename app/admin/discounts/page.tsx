@@ -274,6 +274,15 @@ export default function DiscountsPage() {
                     <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-white border border-white/15">
                       {disc.name}
                     </span>
+                    <span
+                      className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                        disc.isExpired
+                          ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                          : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                      }`}
+                    >
+                      {disc.isExpired ? 'Expired' : 'Active'}
+                    </span>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => toggleDiscount(disc)}
@@ -300,7 +309,7 @@ export default function DiscountsPage() {
 
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-4xl font-extrabold text-white">
-                      {disc.type === 'PERCENTAGE' ? `${disc.value}%` : `$${disc.value}`}
+                      {disc.type === 'PERCENTAGE' ? `${disc.value}%` : `₹${disc.value}`}
                     </span>
                     <span className="text-xs text-white/50 font-mono">OFF</span>
                   </div>
@@ -316,7 +325,7 @@ export default function DiscountsPage() {
                     )}
                     {disc.minPurchase != null && (
                       <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50">
-                        min ${disc.minPurchase}
+                        min ₹{disc.minPurchase}
                       </span>
                     )}
                     {disc.minQuantity != null && (
@@ -445,7 +454,7 @@ export default function DiscountsPage() {
                     {t.isActive ? 'Active' : 'Inactive'}
                   </span>
                   <span className="text-3xl font-extrabold text-[#8978ff]">
-                    {t.type === 'PERCENTAGE' ? `${t.value}%` : `$${t.value}`}
+                    {t.type === 'PERCENTAGE' ? `${t.value}%` : `₹${t.value}`}
                   </span>
                 </div>
               </div>
@@ -487,7 +496,7 @@ export default function DiscountsPage() {
                     className="w-full p-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none"
                   >
                     <option value="PERCENTAGE" className="bg-[#120e28] text-white">Percentage (%)</option>
-                    <option value="FIXED" className="bg-[#120e28] text-white">Fixed Amount ($)</option>
+                    <option value="FIXED" className="bg-[#120e28] text-white">Fixed Amount (₹)</option>
                   </select>
                 </div>
                 <div>
@@ -537,7 +546,7 @@ export default function DiscountsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-white/60 font-medium mb-1 font-mono">Min Purchase ($)</label>
+                  <label className="block text-white/60 font-medium mb-1 font-mono">Min Purchase (₹)</label>
                   <input
                     type="number"
                     step="0.01"

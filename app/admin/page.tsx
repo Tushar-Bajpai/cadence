@@ -108,29 +108,31 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 sm:px-10 py-8 space-y-10">
-        {/* 2. Subscription Overview matching Landing Page Glassmorphism */}
+        {/* 2. Real Financial & Operations Metrics */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-[11px] font-mono tracking-[0.2em] text-[#a79aff] uppercase font-bold">
-              Subscription Overview
+              Subscription & Revenue Metrics
             </h2>
-            <span className="text-[10px] font-mono text-white/40 uppercase">LIVE METRICS</span>
+            <span className="text-[10px] font-mono text-white/40 uppercase">LIVE FROM POSTGRESQL</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Left Card: Current Plan */}
+            {/* Left Card: Normalized MRR & Subscribers */}
             <div className="md:col-span-5 bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:border-[#8978ff]/40 transition-all flex flex-col justify-between">
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-white/50 mb-3">
-                  Current Plan
+                  Monthly Recurring Revenue (MRR)
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                      Pro Plan
+                      {stats?.activeSubscriptionsCount ?? 0} Active Subscriptions
                     </span>
                     <div className="mt-3 flex items-baseline gap-1.5">
-                      <span className="text-3xl font-extrabold text-white tracking-tight">$29</span>
+                      <span className="text-3xl font-extrabold text-white tracking-tight">
+                        {stats?.formattedMrr || '₹0.00'}
+                      </span>
                       <span className="text-xs text-white/50 font-mono">/ Month</span>
                     </div>
                   </div>
@@ -139,48 +141,56 @@ export default function AdminDashboardPage() {
                     onClick={() => setIsRunBillingOpen(true)}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
                   >
-                    <span>Upgrade</span>
-                    <Rocket className="w-3.5 h-3.5" />
+                    <span>Run Billing</span>
+                    <Zap className="w-3.5 h-3.5 fill-white" />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Right Card: Usage Summary */}
+            {/* Right Card: Real Collections & Invoicing Summary */}
             <div className="md:col-span-7 bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:border-[#8978ff]/40 transition-all flex flex-col justify-between">
               <p className="text-xs font-mono uppercase tracking-wider text-white/50 mb-3">
-                Usage Summary
+                Collections & Performance
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Metric 1: API Requests */}
+                {/* Metric 1: Collection Rate */}
                 <div>
                   <div className="flex items-baseline justify-between mb-2">
-                    <span className="text-base font-bold text-white tracking-tight">8,500 / 10,000</span>
-                    <span className="text-xs font-mono font-bold text-[#8978ff]">85%</span>
+                    <span className="text-base font-bold text-white tracking-tight">
+                      {stats?.paidInvoicesCount ?? 0} / {stats?.totalInvoicesCount ?? 0} Invoices
+                    </span>
+                    <span className="text-xs font-mono font-bold text-[#8978ff]">
+                      {stats?.collectionRate ?? 100}%
+                    </span>
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
                     <div
                       className="bg-gradient-to-r from-[#8978ff] to-[#6042ec] h-1.5 rounded-full shadow-[0_0_12px_rgba(137,120,255,0.6)]"
-                      style={{ width: '85%' }}
+                      style={{ width: `${Math.min(100, stats?.collectionRate ?? 100)}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-white/60 mt-2 font-medium">API Requests Used</p>
+                  <p className="text-[11px] text-white/60 mt-2 font-medium">Invoiced Settlement Rate</p>
                 </div>
 
-                {/* Metric 2: Storage Used */}
+                {/* Metric 2: Revenue vs Overdue */}
                 <div>
                   <div className="flex items-baseline justify-between mb-2">
-                    <span className="text-base font-bold text-white tracking-tight">2 GB / 5 GB</span>
-                    <span className="text-xs font-mono font-bold text-amber-400">40%</span>
+                    <span className="text-base font-bold text-white tracking-tight">
+                      {stats?.formattedTotalRevenue || '₹0.00'}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-amber-400">
+                      {stats?.overdueInvoicesCount ? `${stats.overdueInvoicesCount} Due` : '0 Overdue'}
+                    </span>
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-amber-400 to-amber-500 h-1.5 rounded-full"
-                      style={{ width: '40%' }}
+                      className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-1.5 rounded-full"
+                      style={{ width: '100%' }}
                     />
                   </div>
-                  <p className="text-[11px] text-white/60 mt-2 font-medium">Storage Used</p>
+                  <p className="text-[11px] text-white/60 mt-2 font-medium">Total Paid Capital Collected</p>
                 </div>
               </div>
             </div>
@@ -294,7 +304,7 @@ export default function AdminDashboardPage() {
                             {inv.description}
                           </td>
                           <td className="py-4 px-6 text-white font-bold whitespace-nowrap">
-                            ${Number(inv.amount).toFixed(2)}
+                            ₹{Number(inv.amount).toFixed(2)}
                           </td>
                           <td className="py-4 px-6 whitespace-nowrap">
                             {isPaid ? (
@@ -343,57 +353,58 @@ export default function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* 4. Payment Method matching Landing Page & Reference */}
+        {/* 4. Live Subscription Registry */}
         <section className="space-y-4">
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            Payment Method
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              Active Subscriptions Registry
+            </h2>
+            <span className="text-[10px] font-mono text-white/40 uppercase">DETERMINISTIC LIFECYCLE</span>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Visual Obsidian VISA Card */}
-            <div className="md:col-span-5 relative h-52 rounded-2xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between text-white select-none bg-gradient-to-tr from-[#141033] via-[#1a1444] to-[#251e60] border border-[#8978ff]/35">
-              {/* Subtle ambient lighting */}
-              <div className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent pointer-events-none" />
-
-              <div className="flex items-start justify-between relative z-10">
-                <span className="font-extrabold italic text-xl tracking-wider text-white">
-                  VISA
-                </span>
-                <button className="p-1 rounded-full hover:bg-white/10 transition-colors">
-                  <MoreHorizontal className="w-5 h-5 text-white/70" />
-                </button>
-              </div>
-
-              <div className="relative z-10 space-y-4">
-                <div className="font-mono text-lg font-bold tracking-[0.18em] text-white">
-                  1520 0100 3356 6888
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] text-white/60 uppercase tracking-wider font-mono">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {stats?.recentSubscriptions?.length > 0 ? (
+              stats.recentSubscriptions.map((sub: any) => (
+                <div
+                  key={sub.id}
+                  className="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/10 p-5 shadow-sm hover:border-[#8978ff]/40 transition-all flex flex-col justify-between"
+                >
                   <div>
-                    <p className="text-[9px] text-white/40">Cardholder</p>
-                    <p className="font-bold text-white tracking-normal mt-0.5">Robert Fox</p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-semibold text-[#8978ff]">
+                        {sub.number}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          sub.status === 'ACTIVE'
+                            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-white/10 text-white/60'
+                        }`}
+                      >
+                        {sub.status}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-white mt-2.5">
+                      {sub.planName}
+                    </h3>
+                    <p className="text-xs text-white/60 mt-0.5">{sub.customerName}</p>
+                    <p className="text-[11px] text-white/40 font-mono">{sub.customerEmail}</p>
                   </div>
-                  <div>
-                    <p className="text-[9px] text-white/40">Valid Thru</p>
-                    <p className="font-bold text-white tracking-normal mt-0.5">08/28</p>
+
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/50">
+                    <span>{sub.billingPeriod}</span>
+                    <span className="text-white/70">
+                      Renewal: {sub.nextBillingDate ? new Date(sub.nextBillingDate).toLocaleDateString() : '—'}
+                    </span>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-full py-8 text-center text-white/40 text-xs">
+                No subscription records found. Run the billing engine or register a new plan to seed live cycles.
               </div>
-            </div>
-
-            {/* Add New Card Glassmorphic Box */}
-            <div className="md:col-span-7 bg-white/[0.03] backdrop-blur-xl rounded-2xl border-2 border-dashed border-white/15 hover:border-[#8978ff]/60 p-6 shadow-sm flex flex-col items-center justify-center transition-all group cursor-pointer min-h-[208px]">
-              <div className="w-10 h-10 rounded-full bg-white/5 group-hover:bg-[#8978ff]/20 flex items-center justify-center text-white/50 group-hover:text-[#8978ff] transition-colors mb-3">
-                <Plus className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-semibold text-white group-hover:text-[#8978ff] transition-colors">
-                Add New Card
-              </span>
-              <p className="text-[11px] text-white/40 mt-1">
-                Link payment methods for automated subscription renewal
-              </p>
-            </div>
+            )}
           </div>
         </section>
       </div>
