@@ -15,16 +15,27 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get('x-razorpay-signature')
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
 
-    // If webhook secret is configured, verify signature
-    if (webhookSecret && signature) {
-      const expectedSignature = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(rawBody)
-        .digest('hex')
+    // A webhook must be authenticated before it can mutate the ledger.
+    if (!webhookSecret) {
+      console.error(
+        'Razorpay webhook rejected: RAZORPAY_WEBHOOK_SECRET is not configured'
+      )
+      return NextResponse.json(
+        { error: 'Webhook not configured (missing RAZORPAY_WEBHOOK_SECRET)' },
+        { status: 503 }
+      )
+    }
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing webhook signature' }, { status: 400 })
+    }
 
-      if (expectedSignature !== signature) {
-        return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
-      }
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(rawBody)
+      .digest('hex')
+
+    if (expectedSignature !== signature) {
+      return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
     }
 
     const event = JSON.parse(rawBody)
@@ -48,7 +59,13 @@ export async function POST(req: NextRequest) {
           const invoice = await tx.invoice.findUnique({
             where: { id: invoiceId },
           })
-          if (!invoice || invoice.status === InvoiceStatus.PAID) return
+          if (
+            !invoice ||
+            invoice.status === InvoiceStatus.PAID ||
+            invoice.status === InvoiceStatus.CANCELLED
+          ) {
+            return
+          }
 
           const balanceDue = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))
           const amount = paymentEntity.amount ? paymentEntity.amount / 100 : balanceDue

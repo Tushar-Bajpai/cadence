@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler } from '@/lib/api'
+import { apiHandler, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { PayMethod, Prisma } from '@prisma/client'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
  * List all payments with filters: method, dateFrom, dateTo, customerId, search
  * Paginated: ?page=1&limit=20
  */
-export const GET = apiHandler(null, async (req: NextRequest) => {
+export const GET = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
   const { searchParams } = new URL(req.url)
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10))
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)))

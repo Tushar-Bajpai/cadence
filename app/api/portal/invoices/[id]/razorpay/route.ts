@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiContext, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getPortalCustomer } from '@/lib/portal-customer'
 import { getRazorpay, toPaise } from '@/lib/razorpay'
@@ -14,11 +14,11 @@ export const dynamic = 'force-dynamic'
  */
 export const POST = apiHandler(null, async (req: NextRequest, session, context?: ApiContext) => {
   const customer = await getPortalCustomer(session)
-  if (!customer) throw new Error('Customer not found')
+  if (!customer) throw new ApiError(401, 'Please sign in as a customer to pay invoices')
 
   const params = await context?.params
   const idOrSeq = params?.id as string
-  if (!idOrSeq) throw new Error('Invoice ID is required')
+  if (!idOrSeq) throw new ApiError(400, 'Invoice ID is required')
 
   const isNumeric = /^\d+$/.test(idOrSeq)
   const invoice = await db.invoice.findFirst({
@@ -33,21 +33,21 @@ export const POST = apiHandler(null, async (req: NextRequest, session, context?:
     },
   })
 
-  if (!invoice) throw new Error('Invoice not found or access denied')
+  if (!invoice) throw new ApiError(404, 'Invoice not found or access denied')
 
   if (invoice.status === InvoiceStatus.PAID) {
-    throw new Error('Invoice is already paid in full')
+    throw new ApiError(400, 'Invoice is already paid in full')
   }
   if (invoice.status === InvoiceStatus.CANCELLED) {
-    throw new Error('Cannot pay a cancelled invoice')
+    throw new ApiError(400, 'Cannot pay a cancelled invoice')
   }
   if (invoice.status === InvoiceStatus.DRAFT) {
-    throw new Error('Invoice must be confirmed before payment')
+    throw new ApiError(400, 'Invoice must be confirmed before payment')
   }
 
   const balanceDue = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))
   if (balanceDue <= 0) {
-    throw new Error('No outstanding balance on this invoice')
+    throw new ApiError(400, 'No outstanding balance on this invoice')
   }
 
   const razorpay = getRazorpay()

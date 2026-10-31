@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, ApiContext } from '@/lib/api'
+import { apiHandler, ApiError } from '@/lib/api'
 import { db } from '@/lib/db'
 import { getRazorpay, toPaise } from '@/lib/razorpay'
 import { InvoiceStatus } from '@prisma/client'
@@ -8,16 +8,18 @@ export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/payments/razorpay/create-order
- * Creates a Razorpay order for a given invoice.
+ * Creates a Razorpay order for a given invoice. Admin/staff only —
+ * customers go through /api/portal/invoices/[id]/razorpay, which is
+ * scoped to their own invoices.
  * Body: { invoiceId: string }
  * Returns: { orderId, amount, currency, invoiceId, key }
  */
-export const POST = apiHandler(null, async (req: NextRequest) => {
-  const body = await req.json()
+export const POST = apiHandler(['ADMIN', 'STAFF'], async (req: NextRequest) => {
+  const body = await req.json().catch(() => ({}))
   const { invoiceId } = body
 
   if (!invoiceId) {
-    throw new Error('invoiceId is required')
+    throw new ApiError(400, 'invoiceId is required')
   }
 
   // Fetch the invoice
@@ -30,22 +32,22 @@ export const POST = apiHandler(null, async (req: NextRequest) => {
     },
   })
 
-  if (!invoice) throw new Error('Invoice not found')
+  if (!invoice) throw new ApiError(404, 'Invoice not found')
 
   // Only allow payment on CONFIRMED invoices
   if (invoice.status === InvoiceStatus.PAID) {
-    throw new Error('Invoice is already fully paid')
+    throw new ApiError(400, 'Invoice is already fully paid')
   }
   if (invoice.status === InvoiceStatus.CANCELLED) {
-    throw new Error('Cannot pay a cancelled invoice')
+    throw new ApiError(400, 'Cannot pay a cancelled invoice')
   }
   if (invoice.status === InvoiceStatus.DRAFT) {
-    throw new Error('Invoice must be confirmed before payment')
+    throw new ApiError(400, 'Invoice must be confirmed before payment')
   }
 
   const balanceDue = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid))
   if (balanceDue <= 0) {
-    throw new Error('No outstanding balance on this invoice')
+    throw new ApiError(400, 'No outstanding balance on this invoice')
   }
 
   const razorpay = getRazorpay()
