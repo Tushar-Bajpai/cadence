@@ -620,10 +620,59 @@ export default function CustomerPortalPage() {
                           <span>{sub.nextBillingDate}</span>
                         </div>
                       </div>
+
+                      {/* Line Items & Variant Add-ons */}
+                      {sub.lines && sub.lines.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-white/40 block">
+                            Subscribed Products & Variant Add-ons ({sub.lines.length}):
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {sub.lines.map((line: any) => (
+                              <div
+                                key={line.id}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs"
+                              >
+                                <span className="text-white font-medium">{line.description}</span>
+                                <span className="text-[#a79aff] font-mono">{line.formattedAmount}</span>
+                                {sub.lines.length > 1 && (
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      if (confirm(`Remove ${line.description} from subscription?`)) {
+                                        const res = await fetch(`/api/portal/subscriptions/${sub.id}/lines?lineId=${line.id}`, { method: 'DELETE' })
+                                        const d = await res.json()
+                                        if (res.ok) {
+                                          setBannerNotice(d.message)
+                                          fetchPortalData()
+                                        } else {
+                                          alert(d.error)
+                                        }
+                                      }
+                                    }}
+                                    className="text-white/30 hover:text-rose-400 transition ml-1"
+                                    title="Remove Addon Line"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+
+                            <button
+                              onClick={() => setActiveTab('catalog')}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#8978ff]/10 hover:bg-[#8978ff]/20 border border-[#8978ff]/30 text-xs text-[#8978ff] font-medium transition cursor-pointer"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Add Variant Add-on</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Self-service controls */}
-                    <div className="flex items-center gap-2 self-start md:self-center">
+                    <div className="flex items-center gap-2 self-start md:self-center shrink-0">
                       {sub.isPaused ? (
                         <button
                           onClick={() => handleSubscriptionAction(sub.id, 'resume')}
