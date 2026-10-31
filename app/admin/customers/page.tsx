@@ -35,6 +35,8 @@ export default function CustomersPage() {
   }
 
   useEffect(() => {
+    const initialSearch = new URLSearchParams(window.location.search).get('search')
+    if (initialSearch !== null) setSearch(initialSearch)
     fetchCustomers()
   }, [])
 

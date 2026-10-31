@@ -136,7 +136,7 @@ export function AdminSidebar({ onRunBillingClick, onCustomerModalClick }: Sideba
             >
               <div className="flex items-center gap-3">
                 <Zap className="w-4 h-4 fill-[#8978ff]" />
-                <span className="font-semibold">Run Invoicing ⚡</span>
+                <span className="font-semibold">Run Invoicing</span>
               </div>
               <span className="text-[10px] bg-violet-100 text-[#8978ff] px-1.5 py-0.5 rounded font-mono">
                 Batch
@@ -180,4 +180,3 @@ export function AdminSidebar({ onRunBillingClick, onCustomerModalClick }: Sideba
     </aside>
   )
 }
-

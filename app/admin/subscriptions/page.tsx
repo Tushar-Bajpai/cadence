@@ -87,6 +87,15 @@ export default function SubscriptionsPage() {
     fetchPrerequisites()
   }, [])
 
+  useEffect(() => {
+    const initialSearch = new URLSearchParams(window.location.search).get('search')
+    if (initialSearch !== null) setSearch(initialSearch)
+  }, [])
+
+  useEffect(() => {
+    if (search) fetchSubscriptions()
+  }, [search])
+
   const handleTransition = async (id: string, targetStatus?: string, action?: string) => {
     try {
       setActionMessage(null)

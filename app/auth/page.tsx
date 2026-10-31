@@ -256,7 +256,7 @@ export default function AuthPage() {
                   ) : (
                     <Zap className="size-3 fill-[#8978ff] text-[#8978ff]" />
                   )}
-                  <span>Admin ⚡</span>
+                  <span>Admin</span>
                 </button>
 
                 <button

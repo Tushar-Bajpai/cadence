@@ -36,6 +36,7 @@ import {
   UserPlus,
   PauseCircle,
   CircleCheck,
+  Zap,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/use-auth-store'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -616,7 +617,7 @@ export default function CustomerPortalPage() {
                                     }}
                                     className="px-3 py-1 rounded-xl bg-[#8978ff] hover:bg-[#9b8cff] text-white font-semibold transition shadow-sm cursor-pointer"
                                   >
-                                    Pay Now ⚡
+                                    <><span>Pay Now</span><Zap className="size-3.5 fill-current" /></>
                                   </button>
                                 )}
                               </td>

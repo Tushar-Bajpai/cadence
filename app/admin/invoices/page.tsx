@@ -47,8 +47,13 @@ export default function InvoicesPage() {
   }
 
   useEffect(() => {
+    const initialSearch = new URLSearchParams(window.location.search).get('search')
+    if (initialSearch !== null) setSearch(initialSearch)
+  }, [])
+
+  useEffect(() => {
     fetchInvoices()
-  }, [statusFilter, page])
+  }, [statusFilter, page, search])
 
   const handleOpenInvoice = async (invoiceId: string) => {
     try {
@@ -83,7 +88,7 @@ export default function InvoicesPage() {
           className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#8978ff] hover:bg-[#9b8cff] text-white text-xs font-semibold shadow-[0_4px_20px_rgba(137,120,255,0.4)] transition-all cursor-pointer"
         >
           <Zap className="w-4 h-4 fill-white" />
-          <span>Run Billing Batch ⚡</span>
+          <span>Run Billing Batch</span>
         </button>
       </div>
 

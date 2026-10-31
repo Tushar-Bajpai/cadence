@@ -16,6 +16,7 @@ import {
   User,
   Users,
   Zap,
+  LogOut,
 } from 'lucide-react'
 import { useAdminStore } from '@/stores/use-admin-store'
 import { useAuthStore } from '@/stores/use-auth-store'
@@ -117,7 +118,12 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
-    router.push(`/admin/invoices?search=${encodeURIComponent(searchQuery)}`)
+    const target = pathname.startsWith('/admin/customers')
+      ? '/admin/customers'
+      : pathname.startsWith('/admin/subscriptions')
+      ? '/admin/subscriptions'
+      : '/admin/invoices'
+    router.push(`${target}?search=${encodeURIComponent(searchQuery.trim())}`)
   }
 
   return (
@@ -195,7 +201,6 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
           >
             <Zap className="w-4 h-4 fill-white text-white" />
             <span>Run Billing</span>
-            <span>⚡</span>
           </button>
 
           {/* Settings & Account Cluster matching Image 1 */}
@@ -257,6 +262,19 @@ export function TopNavbar({ onRunBillingClick, onCustomerModalClick }: TopNavbar
                   <ExternalLink className="w-4 h-4 text-white/50" />
                   <span>Landing Magazine</span>
                 </Link>
+
+                <div className="my-1 border-t border-white/10" />
+
+                <button
+                  onClick={async () => {
+                    setShowSettingsMenu(false)
+                    await useAuthStore.getState().logout()
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-300 hover:text-rose-200 hover:bg-rose-500/10 text-left font-medium transition-colors"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>Sign Out</span>
+                </button>
               </div>
             )}
           </div>
