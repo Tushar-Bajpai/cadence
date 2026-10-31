@@ -1,7 +1,7 @@
 import { Prisma, TaxType } from '@prisma/client'
 
 export interface TaxInfo {
-  id: string
+  id?: string
   name: string
   type: TaxType
   value: Prisma.Decimal | number
