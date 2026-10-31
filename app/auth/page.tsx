@@ -211,6 +211,7 @@ export default function AuthPage() {
                   <input
                     type="email"
                     required
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
@@ -236,6 +237,7 @@ export default function AuthPage() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
